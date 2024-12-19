@@ -72,19 +72,6 @@ To reconfigure those flags, edit
 [iri_driver.f90](./iri2020/src/iri_driver.f90)
 and recompile iri2020_driver executable.
 
-### Matlab
-
-IRI2020 is readily accessible from Matlab.
-From within Matlab verify everything is working by:
-
-```matlab
-TestAll
-```
-
-The [Examples](./Examples) directory has simple example use with plots.
-
-![Matlab IRI2020 plot](./figures/matlab.png)
-
 ## Data files
 
 `src/iri2020/data/{apf107.dat,ig_rz.dat}`
