@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .profile import geoprofile
+from .vprofile import geoprofile
 
 from pathlib import Path
 from argparse import ArgumentParser

@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 
-from .profile import timeprofile
+from .vprofile import timeprofile
 
 
 def main(time: list[str], alt_km: list[float], glat: float, glon: float):

@@ -56,7 +56,7 @@ If you have errors about building on the first run, ensure that your Fortran com
 * Time profile: plot densities and height at the peak of F2, F2, and E regions vs UTC
 
   ```sh
-  python -m iri2020.time 2014-11-21 2014-11-22 1 -11.95 -76.77
+  python -m iri2020.times 2014-11-21 2014-11-22 1 -11.95 -76.77
   ```
 
   ![image](./figures/iri_time_plasma.png)

@@ -1,4 +1,4 @@
-import iri2020.time as time_profile
+import iri2020.times as time_profile
 import iri2020.latitude as lat_profile
 import iri2020.altitude as alt_profile
 
