@@ -30,9 +30,10 @@ def IRI(time: str | datetime, altkmrange: list[float], glat: float, glon: float)
         iri_name += ".exe"
 
     # %% run IRI
-    with impr.as_file(impr.files(__package__).joinpath(iri_name)) as exe, impr.as_file(
-        impr.files(__package__).joinpath("data")
-    ) as data_path:
+    with (
+        impr.as_file(impr.files(__package__).joinpath(iri_name)) as exe,
+        impr.as_file(impr.files(__package__).joinpath("data")) as data_path,
+    ):
 
         if not exe.is_file():
             build()
