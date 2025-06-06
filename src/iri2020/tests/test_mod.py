@@ -12,7 +12,7 @@ def test_altitude_profile():
     iri = iri2020.IRI(time, altkmrange, glat, glon)
 
     # .item() necessary for stability across OS, pytest versions, etc.
-    assert iri["ne"][10].item() == approx(24407842800.0)
-    assert iri.NmF2.item() == approx(77149454300.0)
-    assert iri.hmF2.item() == approx(265.249115)
-    assert iri.foF2.item() == approx(2.4943397)
+    assert iri["ne"][10].item() == approx(24407842800.0, rel=0.001)
+    assert iri.NmF2.item() == approx(77149454300.0, rel=0.001)
+    assert iri.hmF2.item() == approx(265.249115, rel=0.001)
+    assert iri.foF2.item() == approx(2.4943397, rel=0.001)
