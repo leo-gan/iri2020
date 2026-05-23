@@ -447,7 +447,7 @@ C*****************************************************************
       REAL       LATI,LONGI,MO2,MO,MODIP,NMF2,MAGBR,INVDIP,IAPO,
      &           NMF1,NME,NMD,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
      &           INVDIP_OLD,INVDPC_OLD
-      CHARACTER  FILNAM*12
+      CHARACTER  FILNAM*21
 c-web-for webversion
 c      CHARACTER FILNAM*53
 
@@ -1255,7 +1255,7 @@ C
 
 7797    URSIFO=URSIF2
         WRITE(FILNAM,104) MONTH+10
-104         FORMAT('ccir',I2,'.asc')
+104         FORMAT('src/data/ccir',I2,'.asc')
 c-web-for webversion
 c104     FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ccir',I2,'.asc')
         OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
@@ -1268,7 +1268,7 @@ C then URSI if chosen ....................................
 C
         if(URSIF2) then
           WRITE(FILNAM,1144) MONTH+10
-1144          FORMAT('ursi',I2,'.asc')
+1144          FORMAT('src/data/ursi',I2,'.asc')
 c-web-for webversion
 c1144    FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ursi',I2,'.asc')
           OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,

@@ -1,0 +1,13 @@
+site_name: IRI2020 Rust Port
+theme:
+  name: material
+  palette:
+    scheme: slate
+
+nav:
+  - Home: index.md
+  - Package & Math Model (Rust Part): package.md
+  - Porting Documentation: porting.md
+
+plugins:
+  - search

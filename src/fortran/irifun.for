@@ -7608,7 +7608,7 @@ c     .. local arrays ..
 c
       if (coeff_month_read(month) .eq. 0) then
         write(filedata, 10) month+10
-        open(15, File=filedata, status='old')
+        open(15, File=filedata, STATUS='old')
 	  do j=0,47
 	    read(15,20) (coeff_month_all(i,j,month),i=0,148)
         end do
@@ -7630,7 +7630,7 @@ c		print*,coeff_month_read(4),coeff_month(0,0),
 c     &        coeff_month(148,1)
 	  return
 
- 10   format('mcsat',i2,'.dat')
+ 10   format('src/data/mcsat',i2,'.dat')
 c-web- special for web version
 c10     FORMAT('/var/www/omniweb/cgi/vitmo/IRI/mcsat',I2,'.dat')
  20   format(6(d12.5))
@@ -10561,12 +10561,12 @@ c----------------------------------------------------------------
 
            common /igrz/aig,arz,iymst,iymend
 
-           open(unit=12,file='ig_rz.dat',FORM='FORMATTED',status='old')
+                      open(12,file='src/data/ig_rz.dat',STATUS='old')
 
 c-web- special for web version
 c            open(unit=12,file=
 c     *         '/var/www/omniweb/cgi/vitmo/IRI/ig_rz.dat',
-c     *         FORM='FORMATTED',status='old')
+c     *         FORM='FORMATTED',STATUS='old')
 
 c Read the update date, the start date and the end date (mm,yyyy), and
 c get number of data points to read.
@@ -10743,7 +10743,7 @@ C
         DIMENSION 	af107(27000,3)
         COMMON		/apfa/aap,af107,n
 
-        Open(13,FILE='apf107.dat',FORM='FORMATTED',STATUS='OLD')
+                Open(13,file='src/data/apf107.dat',STATUS='OLD')
 c-web-sepcial vfor web version
 c      OPEN(13,FILE='/var/www/omniweb/cgi/vitmo/IRI/apf107.dat',
 c     *    FORM='FORMATTED',STATUS='OLD')

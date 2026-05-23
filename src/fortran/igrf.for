@@ -722,7 +722,7 @@ C       Open coefficient file. Read past first header record.
 C       Read degree and order of model and Earth's radius.
 C ---------------------------------------------------------------
         WRITE(FOUT,667) FSPEC
- 667    FORMAT(A13)
+ 667    FORMAT('src/data/',A13)
 c-web-for webversion
 c 667    FORMAT('/var/www/omniweb/cgi/vitmo/IRI/',A13)
         OPEN (IU, FILE=FOUT, STATUS='OLD', IOSTAT=IER, ERR=999)

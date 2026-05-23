@@ -1,0 +1,108 @@
+use crate::ffi::*;
+
+pub struct IriResult {
+    pub altkm: Vec<f32>,
+    pub outf: Vec<Vec<f32>>,
+    pub oarr: Vec<f32>,
+}
+
+pub fn run_iri(
+    year: i32,
+    month: i32,
+    day: i32,
+    hour: f32,
+    glat: f32,
+    glon: f32,
+    alt_range: [f32; 3],
+) -> IriResult {
+    let mut jf = [true; 50];
+    for item in jf.iter_mut().take(6).skip(3) { *item = false; }
+    jf[21] = false;
+    jf[22] = false;
+    jf[29] = false;
+    jf[32] = false;
+    jf[33] = false;
+    jf[34] = false;
+    for item in jf.iter_mut().take(40).skip(38) { *item = false; }
+    jf[46] = false;
+
+    let jmag = 0;
+    let mmdd = month * 100 + day;
+    let dhour = hour;
+    let dhour_plus_25 = dhour + 25.0;
+
+    unsafe {
+        read_ig_rz_c();
+        readapf107_c();
+    }
+
+    let heibeg = alt_range[0];
+    let heiend = alt_range[1];
+    let heistp = alt_range[2];
+
+    let mut outf = vec![0.0_f32; 20 * 1000];
+    let mut oarr = vec![0.0_f32; 100];
+
+    unsafe {
+        iri_sub_c(
+            jf.as_ptr(),
+            jmag,
+            glat,
+            glon,
+            year,
+            mmdd,
+            dhour_plus_25,
+            heibeg,
+            heiend,
+            heistp,
+            outf.as_mut_ptr(),
+            oarr.as_mut_ptr(),
+        );
+    }
+
+    let mut tecbo = 0.0_f32;
+    let mut tecto = 0.0_f32;
+
+    unsafe {
+        iritec_c(
+            glat,
+            glon,
+            jmag,
+            jf.as_ptr(),
+            year,
+            mmdd,
+            dhour_plus_25,
+            0.0,
+            heiend,
+            0.1,
+            oarr.as_mut_ptr(),
+            &mut tecbo,
+            &mut tecto,
+        );
+    }
+
+    oarr[36] = tecbo + tecto;
+    if oarr[36] != 0.0 {
+        oarr[37] = tecto / oarr[36] * 100.0;
+    }
+
+    let num_alt = ((heiend - heibeg) / heistp) as usize + 1;
+    let mut altkm = Vec::with_capacity(num_alt);
+    for i in 0..num_alt {
+        altkm.push(heibeg + (i as f32) * heistp);
+    }
+
+    let mut outf_result = vec![vec![0.0; num_alt]; 14];
+
+    for col in 0..num_alt {
+        for row in 0..14 {
+            outf_result[row][col] = outf[col * 20 + row];
+        }
+    }
+
+    IriResult {
+        altkm,
+        outf: outf_result,
+        oarr,
+    }
+}
