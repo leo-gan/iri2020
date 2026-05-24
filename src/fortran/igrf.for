@@ -710,7 +710,8 @@ C                                 = -2, records out of order
 C                                 = FORTRAN run-time error number
 C ===============================================================
 
-        CHARACTER  FSPEC*(*), FOUT*80
+        CHARACTER  FSPEC*(*), FOUT*512
+        CHARACTER  PREFIX*256
         DIMENSION       GH(196)
         LOGICAL		mess
         COMMON/iounit/konsol,mess
@@ -721,11 +722,10 @@ C ---------------------------------------------------------------
 C       Open coefficient file. Read past first header record.
 C       Read degree and order of model and Earth's radius.
 C ---------------------------------------------------------------
-        WRITE(FOUT,667) FSPEC
- 667    FORMAT('src/data/',A13)
-c-web-for webversion
-c 667    FORMAT('/var/www/omniweb/cgi/vitmo/IRI/',A13)
-        OPEN (IU, FILE=FOUT, STATUS='OLD', IOSTAT=IER, ERR=999)
+        call get_data_prefix(prefix)
+        FOUT = trim(prefix) // FSPEC
+        OPEN (IU, FILE=trim(FOUT), STATUS='OLD', IOSTAT=IER, ERR=999)
+
         READ (IU, *, IOSTAT=IER, ERR=999)
         READ (IU, *, IOSTAT=IER, ERR=999) NMAX, ERAD, XMYEAR
         nm=nmax*(nmax+2)

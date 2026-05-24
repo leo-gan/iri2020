@@ -1,8 +1,10 @@
 use crate::ffi::*;
+use pyo3::prelude::*;
+use pyo3::exceptions::PyValueError;
 
 pub struct IriResult {
     pub altkm: Vec<f32>,
-    pub outf: Vec<Vec<f32>>,
+    pub outf: Vec<f32>,
     pub oarr: Vec<f32>,
 }
 
@@ -14,7 +16,17 @@ pub fn run_iri(
     glat: f32,
     glon: f32,
     alt_range: [f32; 3],
-) -> IriResult {
+) -> Result<IriResult, PyErr> {
+    if std::env::var("IRI2020_DATA_DIR").is_err() {
+        if std::path::Path::new("src/data").exists() {
+            if let Ok(abs_path) = std::fs::canonicalize("src/data") {
+                if let Some(path_str) = abs_path.to_str() {
+                    std::env::set_var("IRI2020_DATA_DIR", path_str);
+                }
+            }
+        }
+    }
+
     let mut jf = [true; 50];
     for item in jf.iter_mut().take(6).skip(3) { *item = false; }
     jf[21] = false;
@@ -39,6 +51,18 @@ pub fn run_iri(
     let heibeg = alt_range[0];
     let heiend = alt_range[1];
     let heistp = alt_range[2];
+
+    if heistp <= 0.0 {
+        return Err(PyValueError::new_err("heistp must be greater than 0.0"));
+    }
+    if heiend < heibeg {
+        return Err(PyValueError::new_err("heiend must be greater than or equal to heibeg"));
+    }
+
+    let num_alt = ((heiend - heibeg) / heistp) as usize + 1;
+    if num_alt > 1000 {
+        return Err(PyValueError::new_err("num_alt must be less than or equal to 1000"));
+    }
 
     let mut outf = vec![0.0_f32; 20 * 1000];
     let mut oarr = vec![0.0_f32; 100];
@@ -86,23 +110,15 @@ pub fn run_iri(
         oarr[37] = tecto / oarr[36] * 100.0;
     }
 
-    let num_alt = ((heiend - heibeg) / heistp) as usize + 1;
     let mut altkm = Vec::with_capacity(num_alt);
     for i in 0..num_alt {
         altkm.push(heibeg + (i as f32) * heistp);
     }
 
-    let mut outf_result = vec![vec![0.0; num_alt]; 14];
-
-    for col in 0..num_alt {
-        for row in 0..14 {
-            outf_result[row][col] = outf[col * 20 + row];
-        }
-    }
-
-    IriResult {
+    Ok(IriResult {
         altkm,
-        outf: outf_result,
+        outf,
         oarr,
-    }
+    })
 }
+

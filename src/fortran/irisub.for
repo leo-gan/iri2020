@@ -447,7 +447,9 @@ C*****************************************************************
       REAL       LATI,LONGI,MO2,MO,MODIP,NMF2,MAGBR,INVDIP,IAPO,
      &           NMF1,NME,NMD,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
      &           INVDIP_OLD,INVDPC_OLD
-      CHARACTER  FILNAM*21
+      CHARACTER  FILNAM*512
+      CHARACTER  PREFIX*256
+      CHARACTER  MONTH_STR*2
 c-web-for webversion
 c      CHARACTER FILNAM*53
 
@@ -1254,11 +1256,10 @@ C
       endif
 
 7797    URSIFO=URSIF2
-        WRITE(FILNAM,104) MONTH+10
-104         FORMAT('src/data/ccir',I2,'.asc')
-c-web-for webversion
-c104     FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ccir',I2,'.asc')
-        OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') month+10
+        filnam = trim(prefix) // 'ccir' // month_str // '.asc'
+        OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &          FORM='FORMATTED')
         READ(IUCCIR,4689) F2,FM3
 4689    FORMAT(1X,4E15.8)
@@ -1267,11 +1268,10 @@ C
 C then URSI if chosen ....................................
 C
         if(URSIF2) then
-          WRITE(FILNAM,1144) MONTH+10
-1144          FORMAT('src/data/ursi',I2,'.asc')
-c-web-for webversion
-c1144    FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ursi',I2,'.asc')
-          OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+          call get_data_prefix(prefix)
+          write(month_str, '(I2)') month+10
+          filnam = trim(prefix) // 'ursi' // month_str // '.asc'
+          OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &         FORM='FORMATTED')
           READ(IUCCIR,4689) F2
           CLOSE(IUCCIR)
@@ -1288,8 +1288,10 @@ c
 c first CCIR ..............................................
 c
 
-        WRITE(FILNAM,104) NMONTH+10
-        OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') nmonth+10
+        filnam = trim(prefix) // 'ccir' // month_str // '.asc'
+        OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &          FORM='FORMATTED')
         READ(IUCCIR,4689) F2N,FM3N
         CLOSE(IUCCIR)
@@ -1298,8 +1300,10 @@ C
 C then URSI if chosen .....................................
 C
         if(URSIF2) then
-          WRITE(FILNAM,1144) NMONTH+10
-          OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+          call get_data_prefix(prefix)
+          write(month_str, '(I2)') nmonth+10
+          filnam = trim(prefix) // 'ursi' // month_str // '.asc'
+          OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &         FORM='FORMATTED')
           READ(IUCCIR,4689) F2N
           CLOSE(IUCCIR)
@@ -2622,3 +2626,22 @@ c                call iri_tec (50.,h_tec_max,2,tec,tect,tecb)
 
         return
         end
+
+      subroutine get_data_prefix(prefix)
+      character*(*) prefix
+      character*256 env_data_dir
+      integer l
+      call getenv('IRI2020_DATA_DIR', env_data_dir)
+      if (env_data_dir .eq. ' ') then
+          prefix = 'src/data/'
+      else
+          l = len_trim(env_data_dir)
+          if (env_data_dir(l:l) .eq. '/') then
+              prefix = env_data_dir(1:l)
+          else
+              prefix = env_data_dir(1:l) // '/'
+          endif
+      endif
+      return
+      end
+
