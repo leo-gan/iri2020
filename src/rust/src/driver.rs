@@ -1,6 +1,13 @@
 use crate::ffi::*;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
+use std::sync::{Mutex, OnceLock};
+
+static IRI_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn get_iri_mutex() -> &'static Mutex<()> {
+    IRI_MUTEX.get_or_init(|| Mutex::new(()))
+}
 
 pub struct IriResult {
     pub altkm: Vec<f32>,
@@ -17,11 +24,16 @@ pub fn run_iri(
     glon: f32,
     alt_range: [f32; 3],
 ) -> Result<IriResult, PyErr> {
+    let _lock = get_iri_mutex().lock().unwrap();
     if std::env::var("IRI2020_DATA_DIR").is_err() {
-        if std::path::Path::new("src/data").exists() {
-            if let Ok(abs_path) = std::fs::canonicalize("src/data") {
-                if let Some(path_str) = abs_path.to_str() {
-                    std::env::set_var("IRI2020_DATA_DIR", path_str);
+        let paths = ["src/data", "../data", "../../src/data", "data"];
+        for path in &paths {
+            if std::path::Path::new(path).exists() {
+                if let Ok(abs_path) = std::fs::canonicalize(path) {
+                    if let Some(path_str) = abs_path.to_str() {
+                        std::env::set_var("IRI2020_DATA_DIR", path_str);
+                        break;
+                    }
                 }
             }
         }
