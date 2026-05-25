@@ -179,4 +179,27 @@ contains
         call METERS(meter_val)
     end subroutine c_meters
 
+    subroutine c_vfjmodelrocstart(vzm_c) bind(C, name="vfjmodelrocstart_c")
+        real(c_float), intent(out) :: vzm_c(59, 25, 4, 11)
+        call vfjmodelrocstart(vzm_c)
+    end subroutine c_vfjmodelrocstart
+
+    subroutine c_vfjmodelrocinit(f107_c, idoy_c, jseas_c, jsfl_c) bind(C, name="vfjmodelrocinit_c")
+        real(c_float), intent(in), value :: f107_c
+        integer(c_int), intent(in), value :: idoy_c
+        integer(c_int), intent(out) :: jseas_c
+        integer(c_int), intent(out) :: jsfl_c
+        call vfjmodelrocinit(f107_c, idoy_c, jseas_c, jsfl_c)
+    end subroutine c_vfjmodelrocinit
+
+    subroutine c_vfjmodelroc(fjm_c, ttl_c, gglon_c, jseas_c, jsfl_c, viv_c) bind(C, name="vfjmodelroc_c")
+        real(c_float), intent(in) :: fjm_c(59, 25, 4, 11)
+        real(c_float), intent(in), value :: ttl_c
+        real(c_float), intent(in), value :: gglon_c
+        integer(c_int), intent(in), value :: jseas_c
+        integer(c_int), intent(in), value :: jsfl_c
+        real(c_float), intent(out) :: viv_c
+        call vfjmodelroc(fjm_c, ttl_c, gglon_c, jseas_c, jsfl_c, viv_c)
+    end subroutine c_vfjmodelroc
+
 end module iri_c_bindings

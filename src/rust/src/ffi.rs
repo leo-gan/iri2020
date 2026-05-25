@@ -104,4 +104,22 @@ extern "C" {
     pub fn tselec_c(sv_c: *const c_float);
 
     pub fn meters_c(meter_c: bool);
+
+    pub fn vfjmodelrocstart_c(vzm_c: *mut c_float);
+
+    pub fn vfjmodelrocinit_c(
+        f107_c: c_float,
+        idoy_c: c_int,
+        jseas_c: *mut c_int,
+        jsfl_c: *mut c_int,
+    );
+
+    pub fn vfjmodelroc_c(
+        fjm_c: *const c_float,
+        ttl_c: c_float,
+        gglon_c: c_float,
+        jseas_c: c_int,
+        jsfl_c: c_int,
+        viv_c: *mut c_float,
+    );
 }
