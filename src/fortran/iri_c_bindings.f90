@@ -272,4 +272,14 @@ contains
 4689    format(1X, 4E15.8)
     end subroutine c_read_coeff
 
+    subroutine c_shellg(glat_c, glon_c, alt_c, fl_c, icode_c, b0_c) bind(C, name="shellg_c")
+        real(c_float), intent(in), value :: glat_c
+        real(c_float), intent(in), value :: glon_c
+        real(c_float), intent(in), value :: alt_c
+        real(c_float), intent(out) :: fl_c
+        integer(c_int), intent(out) :: icode_c
+        real(c_float), intent(out) :: b0_c
+        call SHELLG(glat_c, glon_c, alt_c, fl_c, icode_c, b0_c)
+    end subroutine c_shellg
+
 end module iri_c_bindings

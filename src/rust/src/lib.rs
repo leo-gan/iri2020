@@ -7,6 +7,7 @@ pub mod cira;
 pub mod rocdrift_coeff;
 pub mod rocdrift;
 pub mod data_io;
+pub mod irifun_utils;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;

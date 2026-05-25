@@ -147,4 +147,13 @@ extern "C" {
         f2_c: *mut c_float,
         fm3_c: *mut c_float,
     );
+
+    pub fn shellg_c(
+        glat_c: c_float,
+        glon_c: c_float,
+        alt_c: c_float,
+        fl_c: *mut c_float,
+        icode_c: *mut c_int,
+        b0_c: *mut c_float,
+    );
 }
