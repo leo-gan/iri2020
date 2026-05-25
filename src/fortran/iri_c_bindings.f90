@@ -128,4 +128,55 @@ contains
         umr = pi / 180.0
     end subroutine c_init_igrf
 
+    subroutine c_gtd7(iyd_c, sec_c, alt_c, glat_c, glong_c, stl_c, f107a_c, f107_c, ap_c, mass_c, d_c, t_c) bind(C, name="gtd7_c")
+        integer(c_int), intent(in), value :: iyd_c
+        real(c_float), intent(in), value :: sec_c
+        real(c_float), intent(in), value :: alt_c
+        real(c_float), intent(in), value :: glat_c
+        real(c_float), intent(in), value :: glong_c
+        real(c_float), intent(in), value :: stl_c
+        real(c_float), intent(in), value :: f107a_c
+        real(c_float), intent(in), value :: f107_c
+        real(c_float), intent(in) :: ap_c(7)
+        integer(c_int), intent(in), value :: mass_c
+        real(c_float), intent(out) :: d_c(9)
+        real(c_float), intent(out) :: t_c(2)
+
+        real :: tlb, s, db04, db16, db28, db32, db40, db48, db01, za, t0, z0, g0, rl, dd, db14, tr12
+        common/gts3c/tlb,s,db04,db16,db28,db32,db40,db48,db01,za,t0,z0,g0,rl,dd,db14,tr12
+        real :: tn1(5), tn2(4), tn3(5), tgn1(2), tgn2(2), tgn3(2)
+        common/meso7/tn1,tn2,tn3,tgn1,tgn2,tgn3
+
+        call GTD7(iyd_c, sec_c, alt_c, glat_c, glong_c, stl_c, f107a_c, f107_c, ap_c, mass_c, d_c, t_c)
+
+    end subroutine c_gtd7
+
+    subroutine c_gtd7d(iyd_c, sec_c, alt_c, glat_c, glong_c, stl_c, f107a_c, f107_c, ap_c, mass_c, d_c, t_c) bind(C, name="gtd7d_c")
+        integer(c_int), intent(in), value :: iyd_c
+        real(c_float), intent(in), value :: sec_c
+        real(c_float), intent(in), value :: alt_c
+        real(c_float), intent(in), value :: glat_c
+        real(c_float), intent(in), value :: glong_c
+        real(c_float), intent(in), value :: stl_c
+        real(c_float), intent(in), value :: f107a_c
+        real(c_float), intent(in), value :: f107_c
+        real(c_float), intent(in) :: ap_c(7)
+        integer(c_int), intent(in), value :: mass_c
+        real(c_float), intent(out) :: d_c(9)
+        real(c_float), intent(out) :: t_c(2)
+        call GTD7D(iyd_c, sec_c, alt_c, glat_c, glong_c, stl_c, f107a_c, f107_c, ap_c, mass_c, d_c, t_c)
+    end subroutine c_gtd7d
+
+    subroutine c_tselec(sv_c) bind(C, name="tselec_c")
+        real(c_float), intent(in) :: sv_c(25)
+        call TSELEC(sv_c)
+    end subroutine c_tselec
+
+    subroutine c_meters(meter_c) bind(C, name="meters_c")
+        logical(c_bool), intent(in), value :: meter_c
+        logical :: meter_val
+        meter_val = meter_c
+        call METERS(meter_val)
+    end subroutine c_meters
+
 end module iri_c_bindings

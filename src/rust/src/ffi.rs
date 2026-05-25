@@ -70,4 +70,38 @@ extern "C" {
     );
 
     pub fn init_igrf_c();
+
+    pub fn gtd7_c(
+        iyd_c: c_int,
+        sec_c: c_float,
+        alt_c: c_float,
+        glat_c: c_float,
+        glong_c: c_float,
+        stl_c: c_float,
+        f107a_c: c_float,
+        f107_c: c_float,
+        ap_c: *const c_float,
+        mass_c: c_int,
+        d_c: *mut c_float,
+        t_c: *mut c_float,
+    );
+
+    pub fn gtd7d_c(
+        iyd_c: c_int,
+        sec_c: c_float,
+        alt_c: c_float,
+        glat_c: c_float,
+        glong_c: c_float,
+        stl_c: c_float,
+        f107a_c: c_float,
+        f107_c: c_float,
+        ap_c: *const c_float,
+        mass_c: c_int,
+        d_c: *mut c_float,
+        t_c: *mut c_float,
+    );
+
+    pub fn tselec_c(sv_c: *const c_float);
+
+    pub fn meters_c(meter_c: bool);
 }
