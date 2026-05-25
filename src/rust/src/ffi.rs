@@ -156,4 +156,139 @@ extern "C" {
         icode_c: *mut c_int,
         b0_c: *mut c_float,
     );
+
+    pub fn iondani_c(
+        id_c: c_int,
+        ismo_c: c_int,
+        hx_c: c_float,
+        zd_c: c_float,
+        fd_c: c_float,
+        fs_c: c_float,
+        dion_c: *mut c_float,
+    );
+
+    pub fn f1_prob_c(
+        sza_c: c_float,
+        glat_c: c_float,
+        rz12_c: c_float,
+        f1prob_c: *mut c_float,
+        f1probl_c: *mut c_float,
+    );
+
+    pub fn set_xe_blocks_c(
+        hmf2_c: c_float,
+        xnmf2_c: c_float,
+        hmf1_c: c_float,
+        f1reg_c: bool,
+        b0_c: c_float,
+        b1_c: c_float,
+        c1_c: c_float,
+        hz_c: c_float,
+        t_c: c_float,
+        hst_c: c_float,
+        hme_c: c_float,
+        xnme_c: c_float,
+        hef_c: c_float,
+        night_c: bool,
+        e_c: *const c_float,
+        hmd_c: c_float,
+        xnmd_c: c_float,
+        hdx_c: c_float,
+        d1_c: c_float,
+        xkk_c: c_float,
+        fp30_c: c_float,
+        fp3u_c: c_float,
+        fp1_c: c_float,
+        fp2_c: c_float,
+        beta_c: c_float,
+        eta_c: c_float,
+        delta_c: c_float,
+        zeta_c: c_float,
+        b2top_c: c_float,
+        itopn_c: c_int,
+        tcor1_c: c_float,
+        tcor2_c: c_float,
+    );
+
+    pub fn get_xe_blocks_c(
+        hmf2_c: *mut c_float,
+        xnmf2_c: *mut c_float,
+        hmf1_c: *mut c_float,
+        f1reg_c: *mut bool,
+        b0_c: *mut c_float,
+        b1_c: *mut c_float,
+        c1_c: *mut c_float,
+        hz_c: *mut c_float,
+        t_c: *mut c_float,
+        hst_c: *mut c_float,
+        hme_c: *mut c_float,
+        xnme_c: *mut c_float,
+        hef_c: *mut c_float,
+        night_c: *mut bool,
+        e_c: *mut c_float,
+        hmd_c: *mut c_float,
+        xnmd_c: *mut c_float,
+        hdx_c: *mut c_float,
+        d1_c: *mut c_float,
+        xkk_c: *mut c_float,
+        fp30_c: *mut c_float,
+        fp3u_c: *mut c_float,
+        fp1_c: *mut c_float,
+        fp2_c: *mut c_float,
+        beta_c: *mut c_float,
+        eta_c: *mut c_float,
+        delta_c: *mut c_float,
+        zeta_c: *mut c_float,
+        b2top_c: *mut c_float,
+        itopn_c: *mut c_int,
+        tcor1_c: *mut c_float,
+        tcor2_c: *mut c_float,
+    );
+
+    pub fn xe_1_c(h_c: c_float) -> c_float;
+    pub fn xe1_c(h_c: c_float) -> c_float;
+    pub fn xe2_c(h_c: c_float) -> c_float;
+    pub fn xe3_1_c(h_c: c_float) -> c_float;
+    pub fn xe4_1_c(h_c: c_float) -> c_float;
+    pub fn xe5_c(h_c: c_float) -> c_float;
+    pub fn xe6_c(h_c: c_float) -> c_float;
+    pub fn dxe1n_c(h_c: c_float) -> c_float;
+    pub fn topq_c(h_c: c_float, no_c: c_float, hmax_c: c_float, ho_c: c_float) -> c_float;
+    pub fn zero_c(delta_c: c_float) -> c_float;
+
+    pub fn foeedi_c(cov_c: c_float, xhi_c: c_float, xhim_c: c_float, xlati_c: c_float) -> c_float;
+    pub fn xmded_c(xhi_c: c_float, r_c: c_float, yw_c: c_float) -> c_float;
+    pub fn valgul_c(
+        xhi_c: c_float,
+        hvb_c: *mut c_float,
+        vwu_c: *mut c_float,
+        vwa_c: *mut c_float,
+        vdp_c: *mut c_float,
+    );
+
+    pub fn spharm_c(c_c: *mut c_float, l_c: c_int, m_c: c_int, colat_c: c_float, az_c: c_float);
+    pub fn spharm_ik_c(c_c: *mut c_float, l_c: c_int, m_c: c_int, colat_c: c_float, az_c: c_float);
+
+    pub fn dregion_c(
+        z_c: c_float,
+        it_c: c_int,
+        f_c: c_float,
+        vkp_c: c_float,
+        f5sw_c: c_float,
+        f6wa_c: c_float,
+        elg_c: *mut c_float,
+    );
+
+    pub fn f00_c(
+        hgt_c: c_float,
+        glat1_c: c_float,
+        iday_c: c_int,
+        zang_c: c_float,
+        f107t_c: c_float,
+        edens_c: *mut c_float,
+        ierror_c: *mut c_int,
+    );
+
+    pub fn shamdb0d_c(rlat_c: c_float, flon_c: c_float, t_c: c_float, rz_c: c_float) -> c_float;
+    pub fn shab1d_c(flat_c: c_float, flon_c: c_float, t_c: c_float, rz_c: c_float) -> c_float;
 }

@@ -8,6 +8,14 @@ pub mod rocdrift_coeff;
 pub mod rocdrift;
 pub mod data_io;
 pub mod irifun_utils;
+pub mod ioncom;
+pub mod xe_profile;
+pub mod e_layer;
+pub mod spharm;
+pub mod d_region;
+pub mod firi_data;
+pub mod b0_b1_model;
+
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
