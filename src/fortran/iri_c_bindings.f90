@@ -74,4 +74,58 @@ contains
 
     end subroutine c_iritec
 
+    subroutine c_feldcof(year_c) bind(C, name="feldcof_c")
+        real(c_float), intent(in), value :: year_c
+        call FELDCOF(year_c)
+    end subroutine c_feldcof
+
+    subroutine c_feldg(glat_c, glon_c, alt_c, bnorth_c, beast_c, bdown_c, babs_c) bind(C, name="feldg_c")
+        real(c_float), intent(in), value :: glat_c
+        real(c_float), intent(in), value :: glon_c
+        real(c_float), intent(in), value :: alt_c
+        real(c_float), intent(out) :: bnorth_c
+        real(c_float), intent(out) :: beast_c
+        real(c_float), intent(out) :: bdown_c
+        real(c_float), intent(out) :: babs_c
+        call FELDG(glat_c, glon_c, alt_c, bnorth_c, beast_c, bdown_c, babs_c)
+    end subroutine c_feldg
+
+    subroutine c_igrf(iy_c, nm_c, r_c, t_c, f_c, br_c, bt_c, bf_c) bind(C, name="igrf_c")
+        integer(c_int), intent(in), value :: iy_c
+        integer(c_int), intent(in), value :: nm_c
+        real(c_float), intent(in), value :: r_c
+        real(c_float), intent(in), value :: t_c
+        real(c_float), intent(in), value :: f_c
+        real(c_float), intent(out) :: br_c
+        real(c_float), intent(out) :: bt_c
+        real(c_float), intent(out) :: bf_c
+        call IGRF(iy_c, nm_c, r_c, t_c, f_c, br_c, bt_c, bf_c)
+    end subroutine c_igrf
+
+    subroutine c_igrf_dip(xlat_c, xlong_c, year_c, height_c, dec_c, dip_c, dipl_c, ymodip_c) bind(C, name="igrf_dip_c")
+        real(c_float), intent(in), value :: xlat_c
+        real(c_float), intent(in), value :: xlong_c
+        real(c_float), intent(in), value :: year_c
+        real(c_float), intent(in), value :: height_c
+        real(c_float), intent(out) :: dec_c
+        real(c_float), intent(out) :: dip_c
+        real(c_float), intent(out) :: dipl_c
+        real(c_float), intent(out) :: ymodip_c
+        call igrf_dip(xlat_c, xlong_c, year_c, height_c, dec_c, dip_c, dipl_c, ymodip_c)
+    end subroutine c_igrf_dip
+
+    subroutine c_init_igrf() bind(C, name="init_igrf_c")
+        real(c_float) :: era, aquad, bquad, dimo
+        real(c_float) :: umr, pi
+        common /igrf1/ era, aquad, bquad, dimo
+        common /const/ umr, pi
+        
+        era = 6371.2
+        aquad = 6378.16 * 6378.16
+        bquad = 6356.775 * 6356.775
+        dimo = 0.311653
+        pi = 3.141592653589793
+        umr = pi / 180.0
+    end subroutine c_init_igrf
+
 end module iri_c_bindings

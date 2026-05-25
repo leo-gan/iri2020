@@ -34,4 +34,40 @@ extern "C" {
         tec_c: *mut c_float,
         tect_c: *mut c_float,
     );
+
+    pub fn feldcof_c(year_c: c_float);
+
+    pub fn feldg_c(
+        glat_c: c_float,
+        glon_c: c_float,
+        alt_c: c_float,
+        bnorth_c: *mut c_float,
+        beast_c: *mut c_float,
+        bdown_c: *mut c_float,
+        babs_c: *mut c_float,
+    );
+
+    pub fn igrf_c(
+        iy_c: c_int,
+        nm_c: c_int,
+        r_c: c_float,
+        t_c: c_float,
+        f_c: c_float,
+        br_c: *mut c_float,
+        bt_c: *mut c_float,
+        bf_c: *mut c_float,
+    );
+
+    pub fn igrf_dip_c(
+        xlat_c: c_float,
+        xlong_c: c_float,
+        year_c: c_float,
+        height_c: c_float,
+        dec_c: *mut c_float,
+        dip_c: *mut c_float,
+        dipl_c: *mut c_float,
+        ymodip_c: *mut c_float,
+    );
+
+    pub fn init_igrf_c();
 }

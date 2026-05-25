@@ -1,5 +1,7 @@
 pub mod ffi;
 pub mod driver;
+pub mod igrf_coeff;
+pub mod igrf;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
