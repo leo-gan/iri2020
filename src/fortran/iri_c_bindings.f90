@@ -201,5 +201,75 @@ contains
         real(c_float), intent(out) :: viv_c
         call vfjmodelroc(fjm_c, ttl_c, gglon_c, jseas_c, jsfl_c, viv_c)
     end subroutine c_vfjmodelroc
+    subroutine c_get_igrz(aig_c, arz_c, iymst_c, iymend_c) bind(C, name="get_igrz_c")
+        real(c_float), intent(out) :: aig_c(806)
+        real(c_float), intent(out) :: arz_c(806)
+        integer(c_int), intent(out) :: iymst_c
+        integer(c_int), intent(out) :: iymend_c
+        
+        real :: aig(806), arz(806)
+        integer :: iymst, iymend
+        common /igrz/aig,arz,iymst,iymend
+        
+        aig_c = aig
+        arz_c = arz
+        iymst_c = iymst
+        iymend_c = iymend
+    end subroutine c_get_igrz
+
+    subroutine c_get_apfa(aap_c, af107_c, n_c) bind(C, name="get_apfa_c")
+        integer(c_int), intent(out) :: aap_c(27000, 9)
+        real(c_float), intent(out) :: af107_c(27000, 3)
+        integer(c_int), intent(out) :: n_c
+        
+        integer :: aap(27000,9)
+        real :: af107(27000,3)
+        integer :: n
+        common /apfa/aap,af107,n
+        
+        aap_c = aap
+        af107_c = af107
+        n_c = n
+    end subroutine c_get_apfa
+
+    subroutine c_read_data_sd(month_c, coeff_month_c) bind(C, name="read_data_sd_c")
+        integer(c_int), intent(in), value :: month_c
+        real(c_double), intent(out) :: coeff_month_c(149, 48)
+        
+        double precision :: coeff_month(0:148, 0:47)
+        
+        call read_data_SD(month_c, coeff_month)
+        
+        coeff_month_c = coeff_month
+    end subroutine c_read_data_sd
+
+    subroutine c_read_coeff(month_c, is_ccir_c, f2_c, fm3_c) bind(C, name="read_coeff_c")
+        integer(c_int), intent(in), value :: month_c
+        logical(c_bool), intent(in), value :: is_ccir_c
+        real(c_float), intent(out) :: f2_c(13, 76, 2)
+        real(c_float), intent(out) :: fm3_c(9, 49, 2)
+        
+        character(256) filnam, prefix
+        character(2) month_str
+        integer :: iuccir
+        
+        iuccir = 10
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') month_c+10
+        
+        if (is_ccir_c) then
+            filnam = trim(prefix) // 'ccir' // month_str // '.asc'
+            open(iuccir, file=trim(filnam), status='old')
+            read(iuccir, 4689) f2_c, fm3_c
+            close(iuccir)
+        else
+            filnam = trim(prefix) // 'ursi' // month_str // '.asc'
+            open(iuccir, file=trim(filnam), status='old')
+            read(iuccir, 4689) f2_c
+            close(iuccir)
+        end if
+        
+4689    format(1X, 4E15.8)
+    end subroutine c_read_coeff
 
 end module iri_c_bindings

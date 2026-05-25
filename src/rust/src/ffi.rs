@@ -122,4 +122,29 @@ extern "C" {
         jsfl_c: c_int,
         viv_c: *mut c_float,
     );
+
+    pub fn get_igrz_c(
+        aig_c: *mut c_float,
+        arz_c: *mut c_float,
+        iymst_c: *mut c_int,
+        iymend_c: *mut c_int,
+    );
+
+    pub fn get_apfa_c(
+        aap_c: *mut c_int,
+        af107_c: *mut c_float,
+        n_c: *mut c_int,
+    );
+
+    pub fn read_data_sd_c(
+        month_c: c_int,
+        coeff_month_c: *mut f64,
+    );
+
+    pub fn read_coeff_c(
+        month_c: c_int,
+        is_ccir_c: bool,
+        f2_c: *mut c_float,
+        fm3_c: *mut c_float,
+    );
 }
