@@ -610,6 +610,15 @@ contains
         shab1d_c = b
     end function shab1d_c
 
+    subroutine geocgm01_c(icor_c, iyear_c, hi_c, dat_c, pla_c, plo_c) bind(C, name="geocgm01_c")
+        integer(c_int), intent(in), value :: icor_c, iyear_c
+        real(c_float), intent(in), value :: hi_c
+        real(c_float), intent(inout) :: dat_c(11, 4)
+        real(c_float), intent(inout) :: pla_c(4), plo_c(4)
+        call GEOCGM01(icor_c, iyear_c, hi_c, dat_c, pla_c, plo_c)
+    end subroutine geocgm01_c
+
 end module iri_c_bindings
+
 
 

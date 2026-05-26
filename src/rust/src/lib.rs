@@ -14,7 +14,9 @@ pub mod e_layer;
 pub mod spharm;
 pub mod d_region;
 pub mod iridreg;
+pub mod iriflip;
 pub mod firi_data;
+
 pub mod b0_b1_model;
 
 

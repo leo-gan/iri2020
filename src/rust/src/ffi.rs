@@ -291,4 +291,14 @@ extern "C" {
 
     pub fn shamdb0d_c(rlat_c: c_float, flon_c: c_float, t_c: c_float, rz_c: c_float) -> c_float;
     pub fn shab1d_c(flat_c: c_float, flon_c: c_float, t_c: c_float, rz_c: c_float) -> c_float;
+
+    pub fn geocgm01_c(
+        icor_c: c_int,
+        iyear_c: c_int,
+        hi_c: c_float,
+        dat_c: *mut c_float,
+        pla_c: *mut c_float,
+        plo_c: *mut c_float,
+    );
 }
+
