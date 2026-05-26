@@ -13,8 +13,10 @@ pub mod xe_profile;
 pub mod e_layer;
 pub mod spharm;
 pub mod d_region;
+pub mod iridreg;
 pub mod firi_data;
 pub mod b0_b1_model;
+
 
 
 use pyo3::prelude::*;

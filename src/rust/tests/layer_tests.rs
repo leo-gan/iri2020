@@ -1,8 +1,10 @@
 use iri2020::e_layer::*;
 use iri2020::spharm::*;
 use iri2020::d_region::*;
+use iri2020::iridreg::*;
 use iri2020::b0_b1_model::*;
 use iri2020::ffi::*;
+
 
 #[test]
 fn test_e_layer_equivalence() {
