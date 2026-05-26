@@ -99,23 +99,21 @@ pub fn run_iri(
     let mut tecbo = 0.0_f32;
     let mut tecto = 0.0_f32;
 
-    unsafe {
-        iritec_c(
-            glat,
-            glon,
-            jmag,
-            jf.as_ptr(),
-            year,
-            mmdd,
-            dhour_plus_25,
-            0.0,
-            heiend,
-            0.1,
-            oarr.as_mut_ptr(),
-            &mut tecbo,
-            &mut tecto,
-        );
-    }
+    crate::iritec::iritec(
+        glat,
+        glon,
+        jmag,
+        &jf,
+        year,
+        mmdd,
+        dhour_plus_25,
+        0.0,
+        heiend,
+        0.1,
+        (&mut oarr[..]).try_into().unwrap(),
+        &mut tecbo,
+        &mut tecto,
+    );
 
     oarr[36] = tecbo + tecto;
     if oarr[36] != 0.0 {

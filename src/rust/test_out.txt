@@ -1,0 +1,266 @@
+warning: unused label
+   --> src/iriflip.rs:327:9
+    |
+327 |         'inner: loop {
+    |         ^^^^^^
+    |
+    = note: `#[warn(unused_labels)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/cira.rs:141:13
+    |
+141 |         let mut sav = [1.0; 26];
+    |             ----^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable `dd` is assigned to, but never used
+    --> src/cira.rs:1171:13
+     |
+1171 |         let mut dd = 0.0;
+     |             ^^^^^^
+     |
+     = note: consider using `_dd` instead
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1178:13
+     |
+1178 |             dd = d[2];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1199:13
+     |
+1199 |             dd = d[0];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1228:13
+     |
+1228 |             dd = d[1];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1263:13
+     |
+1263 |             dd = d[3];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1300:13
+     |
+1300 |             dd = d[4];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1329:13
+     |
+1329 |             dd = d[6];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `dd` is never read
+    --> src/cira.rs:1363:13
+     |
+1363 |             dd = d[7];
+     |             ^^^^^^^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `z` is never read
+    --> src/cira.rs:1596:21
+     |
+1596 |         let mut z = 0.0;
+     |                     ^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `zi` is never read
+    --> src/cira.rs:1598:26
+     |
+1598 |             let mut zi = 0.0;
+     |                          ^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `cd` is never read
+    --> src/cira.rs:1608:26
+     |
+1608 |             let mut cd = 0.0;
+     |                          ^^^
+     |
+     = help: maybe it is overwritten before being read?
+
+warning: value assigned to `r3` is never read
+   --> src/irifun_utils.rs:557:9
+    |
+557 |         r3 = r1;
+    |         ^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: variable does not need to be mutable
+  --> src/iridreg.rs:47:9
+   |
+47 |     let mut day1 = (iday - tabm[mon - 1] - 15) as f32 / 30.0;
+   |         ----^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: value assigned to `r0` is never read
+   --> src/iriflip.rs:416:18
+    |
+416 |     let mut r0 = r;
+    |                  ^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `scla` is never read
+   --> src/iriflip.rs:432:20
+    |
+432 |     let mut scla = 0.0_f32;
+    |                    ^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: variable does not need to be mutable
+   --> src/iriflip.rs:796:13
+    |
+796 |         let mut sz = -res.br;
+    |             ----^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/iriflip.rs:828:21
+    |
+828 |                 let mut dd = ds;
+    |                     ----^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/iriflip.rs:889:21
+    |
+889 |                 let mut rm_trace = *rbm;
+    |                     ----^^^^^^^^
+    |                     |
+    |                     help: remove this `mut`
+
+warning: unused variable: `rlo`
+   --> src/iriflip.rs:878:17
+    |
+878 |             let rlo = rlo_temp * 57.2957751;
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_rlo`
+
+warning: value assigned to `ndir` is never read
+   --> src/iriflip.rs:720:13
+    |
+720 |             ndir = 0;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `ndir` is never read
+   --> src/iriflip.rs:714:21
+    |
+714 |                     ndir = 0;
+    |                     ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `ndir` is never read
+   --> src/iriflip.rs:742:17
+    |
+742 |                 ndir = 0;
+    |                 ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `bext`
+   --> src/b0_b1_model.rs:618:5
+    |
+618 |     bext: &[[[f32; 5]; 7]; 7],
+    |     ^^^^ help: if this is intentional, prefix it with an underscore: `_bext`
+
+warning: unused variable: `kext`
+   --> src/b0_b1_model.rs:621:5
+    |
+621 |     kext: i32,
+    |     ^^^^ help: if this is intentional, prefix it with an underscore: `_kext`
+
+warning: unused variable: `lext`
+   --> src/b0_b1_model.rs:622:5
+    |
+622 |     lext: i32,
+    |     ^^^^ help: if this is intentional, prefix it with an underscore: `_lext`
+
+warning: value assigned to `z` is never read
+   --> src/b0_b1_model.rs:638:17
+    |
+638 |     let mut z = 0.0_f32;
+    |                 ^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: multiple fields are never read
+   --> src/cira.rs:32:5
+    |
+  3 | pub struct CiraModel {
+    |            --------- fields in this struct
+...
+ 32 |     gts7_g0: f32,
+    |     ^^^^^^^
+ 33 |     gts7_tlb: f32,
+    |     ^^^^^^^^
+ 34 |     gts7_s: f32,
+    |     ^^^^^^
+ 35 |     gts7_tn1: [f32; 6],
+    |     ^^^^^^^^
+ 36 |     gts7_tgn1: [f32; 3],
+    |     ^^^^^^^^^
+...
+ 52 |     rl: f32,
+    |     ^^
+ 53 |     dd: f32,
+    |     ^^
+...
+102 |     ttest_gb: f32,
+    |     ^^^^^^^^
+103 |     ttest_rout: f32,
+    |     ^^^^^^^^^^
+...
+109 |     globe7_sw9: f32,
+    |     ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `ptl` is never used
+   --> src/cira.rs:295:8
+    |
+137 | impl CiraModel {
+    | -------------- method in this implementation
+...
+295 |     fn ptl(&self, i: usize, j: usize) -> f32 {
+    |        ^^^
+
+warning: `iri2020-rust` (lib) generated 30 warnings (run `cargo fix --lib -p iri2020-rust` to apply 9 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/iritec_tests.rs (target/debug/deps/iritec_tests-7580e302abe8d2b9)
+
+running 1 test
