@@ -213,6 +213,78 @@ impl IgrfModel {
             babs,
         }
     }
+
+    pub fn dpmtrx(&self) -> ([f32; 3], [f32; 3], [f32; 3]) {
+        let mxi = -self.ghi2;
+        let myi = -self.ghi3;
+        let mzi = -self.ghi1;
+        let m = (mxi * mxi + myi * myi + mzi * mzi).sqrt();
+        let mut zm = [0.0; 3];
+        zm[0] = mxi / m;
+        zm[1] = myi / m;
+        zm[2] = mzi / m;
+        let zm12 = (zm[0] * zm[0] + zm[1] * zm[1]).sqrt();
+        let mut ym = [0.0; 3];
+        ym[0] = -zm[1] / zm12;
+        ym[1] = zm[0] / zm12;
+        ym[2] = 0.0;
+        let mut xm = [0.0; 3];
+        xm[0] = ym[1] * zm[2] - ym[2] * zm[1];
+        xm[1] = ym[2] * zm[0] - ym[0] * zm[2];
+        xm[2] = ym[0] * zm[1] - ym[1] * zm[0];
+        (xm, ym, zm)
+    }
+
+    pub fn clcmlt(&self, iyyyy: i32, ddd: i32, uthr: f32, glat: f32, glon: f32) -> f32 {
+        let dtor = UMR;
+        let xg = (glat * dtor).cos() * (glon * dtor).cos();
+        let yg = (glat * dtor).cos() * (glon * dtor).sin();
+        let zg = (glat * dtor).sin();
+        let (xxm, yym, zzm) = self.dpmtrx();
+        
+        let xm = xxm[0] * xg + xxm[1] * yg + xxm[2] * zg;
+        let ym = yym[0] * xg + yym[1] * yg + yym[2] * zg;
+        
+        let ihour = uthr as i32;
+        let min = ((uthr - ihour as f32) * 60.0) as i32;
+        let isec = ((uthr - ihour as f32 - (min as f32) / 60.0) * 3600.0) as i32;
+        
+        let (gst, _slong, srasn, sdec) = sun(iyyyy, ddd + 1, ihour, min, isec);
+        let be = gst;
+        let cal = srasn.cos();
+        let mut sa = [0.0; 3];
+        sa[2] = sdec.sin();
+        sa[0] = sdec.cos();
+        sa[1] = sa[0] * srasn.sin();
+        sa[0] = sa[0] * cal;
+        
+        let s = be.sin();
+        let c = be.cos();
+        let mut sg = [0.0; 3];
+        sg[0] = c * sa[0] + s * sa[1];
+        sg[1] = c * sa[1] - s * sa[0];
+        sg[2] = sa[2];
+        
+        let sm = [
+            xxm[0] * sg[0] + xxm[1] * sg[1] + xxm[2] * sg[2],
+            yym[0] * sg[0] + yym[1] * sg[1] + yym[2] * sg[2],
+            zzm[0] * sg[0] + zzm[1] * sg[1] + zzm[2] * sg[2],
+        ];
+        
+        let lam = ym.atan2(xm);
+        let lams = sm[1].atan2(sm[0]);
+        let mut dellam = lam - lams;
+        if dellam < 0.0 {
+            dellam += 2.0 * PI;
+        }
+        
+        let mlt = (dellam / PI * 12.0 + 12.0) % 24.0;
+        if mlt < 0.0 {
+            mlt + 24.0
+        } else {
+            mlt
+        }
+    }
 }
 
 fn getshc(data_dir: &str, fspec: &str, gh: &mut [f32; 197]) -> Result<(i32, f32, f32), String> {
@@ -542,3 +614,36 @@ pub fn igrf_dip(xlat: f32, xlong: f32, year: f32, height: f32, data_dir: &str) -
         ymodip,
     })
 }
+
+pub fn sun(iyear: i32, iday: i32, ihour: i32, min: i32, isec: i32) -> (f32, f32, f32, f32) {
+    if iyear < 1901 || iyear > 2099 {
+        return (0.0, 0.0, 0.0, 0.0);
+    }
+    let fday = ((ihour * 3600 + min * 60 + isec) as f64) / 86400.0;
+    let dj = (365 * (iyear - 1900) + (iyear - 1901) / 4 + iday) as f64 - 0.5 + fday;
+    let t = dj / 36525.0;
+    let vl = (279.696678 + 0.9856473354 * dj).rem_euclid(360.0);
+    let mut gst = ((279.690983 + 0.9856473354 * dj + 360.0 * fday + 180.0).rem_euclid(360.0)) * (UMR as f64);
+    if gst < 0.0 {
+        gst += 2.0 * PI as f64;
+    }
+    let g = ((358.475845 + 0.985600267 * dj).rem_euclid(360.0)) * (UMR as f64);
+    let mut slong = (vl + (1.91946 - 0.004789 * t) * g.sin() + 0.020094 * (2.0 * g).sin()) * (UMR as f64);
+    if slong > 6.2831853 {
+        slong -= 6.2831853;
+    }
+    if slong < 0.0 {
+        slong += 6.2831853;
+    }
+    let obliq = (23.45229 - 0.0130125 * t) * (UMR as f64);
+    let sob = obliq.sin();
+    let slp = slong - 9.924e-5;
+    let sin1 = sob * slp.sin();
+    let cos1 = (1.0 - sin1 * sin1).sqrt();
+    let sc = sin1 / cos1;
+    let sdec = sc.atan();
+    let srasn = 3.141592654 - (obliq.cos() / sob * sc).atan2(-slp.cos() / cos1);
+    
+    (gst as f32, slong as f32, srasn as f32, sdec as f32)
+}
+

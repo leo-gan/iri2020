@@ -660,7 +660,6 @@ pub fn iondani(id: i32, ismo: i32, hx: f32, zd: f32, fd: f32, fs: f32) -> [f32; 
         dion[1] = cn[1];
         dion[2] = cn[2];
         dion[3] = cn[3];
-        // dion[4..6] are already 0.0
     } else {
         let molecular = ionco2(h, xhi, ismo, f107);
         dion[4] = molecular[0]; // NO+
@@ -669,4 +668,391 @@ pub fn iondani(id: i32, ismo: i32, hx: f32, zd: f32, fd: f32, fs: f32) -> [f32; 
         dion[0] = molecular[3]; // O+
     }
     dion
+}
+
+// --- Truhlik Outer Ionosphere Composition (CALION) ---
+
+pub fn ionlow(
+    invdip: f32,
+    mlt: f32,
+    alt: f32,
+    ddd: i32,
+    d: &[[[f32; 49]; 2]; 4],
+    ion: i32,
+) -> f32 {
+    let dtor = std::f32::consts::PI / 180.0;
+    
+    let mut d_mirror = [[[0.0_f32; 49]; 3]; 4];
+    
+    let mirreq = [
+        1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0,
+        1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
+        -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0
+    ];
+    
+    for i in 0..4 {
+        for s in 0..2 {
+            for j in 0..49 {
+                d_mirror[i][s][j] = d[i][s][j];
+            }
+        }
+        for j in 0..49 {
+            d_mirror[i][2][j] = d[i][1][j] * mirreq[j];
+        }
+    }
+    
+    let rmlt = mlt * dtor * 15.0;
+    let rcolat = (90.0 - invdip) * dtor;
+    let mut c1 = [0.0_f32; 82];
+    crate::spharm::spharm_ik(&mut c1, 6, 6, rcolat, rmlt);
+    
+    let mut c = [0.0_f32; 49];
+    c.copy_from_slice(&c1[0..49]);
+    
+    let mut seza = 0;
+    let mut sezb = 0;
+    let mut ddda = 0;
+    let mut dddb = 0;
+    let mut dddd = ddd;
+    
+    if ddd >= 79 && ddd < 171 {
+        seza = 1;
+        sezb = 2;
+        ddda = 79;
+        dddb = 171;
+    } else if ddd >= 171 && ddd < 265 {
+        seza = 2;
+        sezb = 4;
+        ddda = 171;
+        dddb = 265;
+    } else if ddd >= 265 && ddd < 354 {
+        seza = 4;
+        sezb = 3;
+        ddda = 265;
+        dddb = 354;
+    } else {
+        seza = 3;
+        sezb = 1;
+        ddda = 354;
+        dddb = 365 + 79;
+        if ddd >= 354 {
+            dddd = ddd;
+        } else {
+            dddd = ddd + 365;
+        }
+    }
+    
+    let sezai = ((seza - 1) % 3) as usize;
+    let sezbi = ((sezb - 1) % 3) as usize;
+    
+    // 400km level
+    let mut n0a400 = 0.0_f32;
+    let mut n0b400 = 0.0_f32;
+    for idx in 0..49 {
+        n0a400 += c[idx] * d_mirror[0][sezai][idx];
+        n0b400 += c[idx] * d_mirror[0][sezbi][idx];
+    }
+    let n400a = n0a400;
+    let n400b = n0b400;
+    let n400 = (n400b - n400a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n400a;
+    
+    // 550km level
+    let mut n0a550 = 0.0_f32;
+    let mut n0b550 = 0.0_f32;
+    for idx in 0..49 {
+        n0a550 += c[idx] * d_mirror[1][sezai][idx];
+        n0b550 += c[idx] * d_mirror[1][sezbi][idx];
+    }
+    let n550a = n0a550;
+    let n550b = n0b550;
+    let n550 = (n550b - n550a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n550a;
+    
+    // 750km level
+    let mut n0a750 = 0.0_f32;
+    let mut n0b750 = 0.0_f32;
+    for idx in 0..49 {
+        n0a750 += c[idx] * d_mirror[2][sezai][idx];
+        n0b750 += c[idx] * d_mirror[2][sezbi][idx];
+    }
+    let n750a = n0a750;
+    let n750b = n0b750;
+    let n750 = (n750b - n750a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n750a;
+    
+    // 1000km level
+    let mut n0a100 = 0.0_f32;
+    let mut n0b100 = 0.0_f32;
+    for idx in 0..49 {
+        n0a100 += c[idx] * d_mirror[3][sezai][idx];
+        n0b100 += c[idx] * d_mirror[3][sezbi][idx];
+    }
+    let n100a = n0a100;
+    let n100b = n0b100;
+    let mut n1000 = (n100b - n100a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n100a;
+    
+    if (ion == 0 || ion == 3) && n1000 > n750 {
+        n1000 = n750;
+    }
+    if (ion == 1 || ion == 2) && n1000 < n750 {
+        n1000 = n750;
+    }
+    
+    if alt >= 960.0 {
+        let sum = (n1000 - n750) / 220.0 * (alt - 740.0) + n750;
+        return 10.0_f32.powf(sum);
+    }
+    
+    let mut ano = [n400, n550, n750, n1000];
+    let ah = [390.0_f32, 550.0, 740.0, 960.0];
+    let dno = [20.0_f32, 20.0];
+    
+    let mut st1 = (ano[1] - ano[0]) / (ah[1] - ah[0]);
+    for i in 1..=2 {
+        let st2 = (ano[i + 1] - ano[i]) / (ah[i + 1] - ah[i]);
+        ano[i] = ano[i] - (st2 - st1) * dno[i - 1] * (2.0_f32).ln();
+        st1 = st2;
+    }
+    
+    let mut st = [0.0_f32; 3];
+    for i in 0..3 {
+        st[i] = (ano[i + 1] - ano[i]) / (ah[i + 1] - ah[i]);
+    }
+    
+    let mut sum = ano[0] + st[0] * (alt - ah[0]);
+    for i in 0..2 {
+        let aa = crate::irifun_utils::eptr(alt, dno[i], ah[i + 1]);
+        let bb = crate::irifun_utils::eptr(ah[0], dno[i], ah[i + 1]);
+        sum += (st[i + 1] - st[i]) * (aa - bb) * dno[i];
+    }
+    
+    10.0_f32.powf(sum)
+}
+
+pub fn ionhigh(
+    invdip: f32,
+    mlt: f32,
+    alt: f32,
+    ddd: i32,
+    d: &[[[f32; 49]; 2]; 4],
+    ion: i32,
+) -> f32 {
+    let dtor = std::f32::consts::PI / 180.0;
+    
+    let mut d_mirror = [[[0.0_f32; 49]; 3]; 4];
+    
+    let mirreq = [
+        1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0,
+        1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0,
+        -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0
+    ];
+    
+    for i in 0..4 {
+        for s in 0..2 {
+            for j in 0..49 {
+                d_mirror[i][s][j] = d[i][s][j];
+            }
+        }
+        for j in 0..49 {
+            d_mirror[i][2][j] = d[i][1][j] * mirreq[j];
+        }
+    }
+    
+    let rmlt = mlt * dtor * 15.0;
+    let rcolat = (90.0 - invdip) * dtor;
+    let mut c1 = [0.0_f32; 82];
+    crate::spharm::spharm_ik(&mut c1, 6, 6, rcolat, rmlt);
+    
+    let mut c = [0.0_f32; 49];
+    c.copy_from_slice(&c1[0..49]);
+    
+    let mut seza = 0;
+    let mut sezb = 0;
+    let mut ddda = 0;
+    let mut dddb = 0;
+    let mut dddd = ddd;
+    
+    if ddd >= 79 && ddd < 171 {
+        seza = 1;
+        sezb = 2;
+        ddda = 79;
+        dddb = 171;
+    } else if ddd >= 171 && ddd < 265 {
+        seza = 2;
+        sezb = 4;
+        ddda = 171;
+        dddb = 265;
+    } else if ddd >= 265 && ddd < 354 {
+        seza = 4;
+        sezb = 3;
+        ddda = 265;
+        dddb = 354;
+    } else {
+        seza = 3;
+        sezb = 1;
+        ddda = 354;
+        dddb = 365 + 79;
+        if ddd >= 354 {
+            dddd = ddd;
+        } else {
+            dddd = ddd + 365;
+        }
+    }
+    
+    let sezai = ((seza - 1) % 3) as usize;
+    let sezbi = ((sezb - 1) % 3) as usize;
+    
+    // 550km level
+    let mut n0a550 = 0.0_f32;
+    let mut n0b550 = 0.0_f32;
+    for idx in 0..49 {
+        n0a550 += c[idx] * d_mirror[0][sezai][idx];
+        n0b550 += c[idx] * d_mirror[0][sezbi][idx];
+    }
+    let n550a = n0a550;
+    let n550b = n0b550;
+    let n550 = (n550b - n550a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n550a;
+    
+    // 900km level
+    let mut n0a900 = 0.0_f32;
+    let mut n0b900 = 0.0_f32;
+    for idx in 0..49 {
+        n0a900 += c[idx] * d_mirror[1][sezai][idx];
+        n0b900 += c[idx] * d_mirror[1][sezbi][idx];
+    }
+    let n900a = n0a900;
+    let n900b = n0b900;
+    let n900 = (n900b - n900a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n900a;
+    
+    // 1500km level
+    let mut n0a150 = 0.0_f32;
+    let mut n0b150 = 0.0_f32;
+    for idx in 0..49 {
+        n0a150 += c[idx] * d_mirror[2][sezai][idx];
+        n0b150 += c[idx] * d_mirror[2][sezbi][idx];
+    }
+    let n150a = n0a150;
+    let n150b = n0b150;
+    let n1500 = (n150b - n150a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n150a;
+    
+    // 2500km level
+    let mut n0a250 = 0.0_f32;
+    let mut n0b250 = 0.0_f32;
+    for idx in 0..49 {
+        n0a250 += c[idx] * d_mirror[3][sezai][idx];
+        n0b250 += c[idx] * d_mirror[3][sezbi][idx];
+    }
+    let n250a = n0a250;
+    let n250b = n0b250;
+    let mut n2500 = (n250b - n250a) / (dddb - ddda) as f32 * (dddd - ddda) as f32 + n250a;
+    
+    if (ion == 0 || ion == 3) && n2500 > n1500 {
+        n2500 = n1500;
+    }
+    if (ion == 1 || ion == 2) && n2500 < n1500 {
+        n2500 = n1500;
+    }
+    
+    if alt >= 2250.0 {
+        let sum = (n2500 - n1500) / 750.0 * (alt - 2250.0) + n2500;
+        return 10.0_f32.powf(sum);
+    }
+    
+    let mut ano = [n550, n900, n1500, n2500];
+    let ah = [550.0_f32, 900.0, 1500.0, 2250.0];
+    let dno = [20.0_f32, 20.0];
+    
+    let mut st1 = (ano[1] - ano[0]) / (ah[1] - ah[0]);
+    for i in 1..=2 {
+        let st2 = (ano[i + 1] - ano[i]) / (ah[i + 1] - ah[i]);
+        ano[i] = ano[i] - (st2 - st1) * dno[i - 1] * (2.0_f32).ln();
+        st1 = st2;
+    }
+    
+    let mut st = [0.0_f32; 3];
+    for i in 0..3 {
+        st[i] = (ano[i + 1] - ano[i]) / (ah[i + 1] - ah[i]);
+    }
+    
+    let mut sum = ano[0] + st[0] * (alt - ah[0]);
+    for i in 0..2 {
+        let aa = crate::irifun_utils::eptr(alt, dno[i], ah[i + 1]);
+        let bb = crate::irifun_utils::eptr(ah[0], dno[i], ah[i + 1]);
+        sum += (st[i + 1] - st[i]) * (aa - bb) * dno[i];
+    }
+    
+    10.0_f32.powf(sum)
+}
+
+pub fn calion(
+    invdip: f32,
+    mlt: f32,
+    alt: f32,
+    ddd: i32,
+    pf107: f32,
+    no: &mut f32,
+    nh: &mut f32,
+    nhe: &mut f32,
+    nn: &mut f32,
+) {
+    use crate::calion_coeff::*;
+    
+    let nol = ionlow(invdip, mlt, alt, ddd, &DOL, 0);
+    let nhl = ionlow(invdip, mlt, alt, ddd, &DHL, 1);
+    let nhel = ionlow(invdip, mlt, alt, ddd, &DHEL, 2);
+    let nnl = ionlow(invdip, mlt, alt, ddd, &DNL, 3);
+    
+    let noh = ionhigh(invdip, mlt, alt, ddd, &DOH, 0);
+    let nhh = ionhigh(invdip, mlt, alt, ddd, &DHH, 1);
+    let nheh = ionhigh(invdip, mlt, alt, ddd, &DHEH, 2);
+    let nnh = ionhigh(invdip, mlt, alt, ddd, &DNH, 3);
+    
+    let pf107_clamped = pf107.clamp(65.0, 260.0);
+    
+    let mut no_val = (noh.log10() - nol.log10()) / (210.0 - 85.0) * (pf107_clamped - 85.0) + nol.log10();
+    let mut nh_val = (nhh.log10() - nhl.log10()) / (210.0 - 85.0) * (pf107_clamped - 85.0) + nhl.log10();
+    let mut nhe_val = (nheh.log10() - nhel.log10()) / (210.0 - 85.0) * (pf107_clamped - 85.0) + nhel.log10();
+    let mut nn_val = (nnh.log10() - nnl.log10()) / (210.0 - 85.0) * (pf107_clamped - 85.0) + nnl.log10();
+    
+    no_val = 10.0_f32.powf(no_val);
+    nh_val = 10.0_f32.powf(nh_val);
+    nhe_val = 10.0_f32.powf(nhe_val);
+    nn_val = 10.0_f32.powf(nn_val);
+    
+    let mut ntot = no_val + nh_val + nhe_val + nn_val;
+    if ntot == 0.0 {
+        ntot = 1.0;
+    }
+    no_val /= ntot;
+    nh_val /= ntot;
+    nhe_val /= ntot;
+    nn_val /= ntot;
+    
+    if pf107_clamped < 87.5 {
+        let (nocorr, nhcorr) = if pf107_clamped <= 67.5 {
+            (CORRO[0], CORRH[0])
+        } else {
+            let il = ((pf107_clamped - 57.5) / 10.0).floor() as usize;
+            let noc = (CORRO[il] - CORRO[il - 1]) / 10.0 * (pf107_clamped - 57.5 - 10.0 * il as f32) + CORRO[il - 1];
+            let nhc = (CORRH[il] - CORRH[il - 1]) / 10.0 * (pf107_clamped - 57.5 - 10.0 * il as f32) + CORRH[il - 1];
+            (noc, nhc)
+        };
+        
+        no_val /= nocorr;
+        nh_val /= nhcorr;
+        nhe_val /= nhcorr;
+        nn_val /= nocorr;
+        
+        ntot = no_val + nh_val + nhe_val + nn_val;
+        if ntot == 0.0 {
+            ntot = 1.0;
+        }
+        no_val /= ntot;
+        nh_val /= ntot;
+        nhe_val /= ntot;
+        nn_val /= ntot;
+    }
+    
+    *no = no_val;
+    *nh = nh_val;
+    *nhe = nhe_val;
+    *nn = nn_val;
 }

@@ -1,4 +1,3 @@
-use crate::ffi::*;
 use crate::irifun_utils::{PI, UMR, ARGMAX};
 
 // --- Invariant Latitude / Invariant Dip Latitude Helpers ---
@@ -551,6 +550,9 @@ pub fn iri_sub(
     let mut igrf_model = crate::igrf::IgrfModel::new();
     igrf_model.feldcof(ryear, &data_dir).unwrap();
     dimo = igrf_model.dimo;
+    let apf107_data = crate::data_io::Apf107Data::load(&data_dir).unwrap();
+    let mut cira_model = crate::cira::CiraModel::new();
+    let rocdrift_model = crate::rocdrift::RocdriftModel::new();
     
     let mut dec = 0.0_f32;
     let mut dip = 0.0_f32;
@@ -637,16 +639,14 @@ pub fn iri_sub(
         dat[1] = longi;
         let mut pla = [0.0_f32; 4];
         let mut plo = [0.0_f32; 4];
-        unsafe {
-            crate::ffi::geocgm01_c(
-                1,
-                iyear,
-                height_center,
-                dat.as_mut_ptr(),
-                pla.as_mut_ptr(),
-                plo.as_mut_ptr(),
-            );
-        }
+        crate::iriflip::geocgm01(
+            1,
+            iyear,
+            height_center,
+            &mut dat,
+            &mut pla,
+            &mut plo,
+        );
         cgm_lat = dat[24];
         cgm_lon = dat[25];
         let cgm_mlt00_ut = dat[32];
@@ -656,11 +656,7 @@ pub fn iri_sub(
         }
     }
     
-    let mut xmlt = 0.0_f32;
-    unsafe {
-        crate::ffi::feldcof_c(ryear);
-        crate::ffi::clcmlt_c(iyear, daynr, hourut, lati, longi, &mut xmlt);
-    }
+    let xmlt = igrf_model.clcmlt(iyear, daynr, hourut, lati, longi);
     
     let mut season = ((daynr + 45) / 92) as i32;
     if season < 1 {
@@ -760,18 +756,13 @@ pub fn iri_sub(
     let mut iap_daily = 0;
     let mut isdate = 0;
     
-    unsafe {
-        crate::ffi::apf_only_c(
-            iyear,
-            month,
-            iday,
-            &mut f107_daily,
-            &mut f107pd,
-            &mut f107_81,
-            &mut f107_365,
-            &mut iap_daily,
-            &mut isdate,
-        );
+    if let Some((f107_d, f107_pd, f107_81_val, f107_365_val, iap_d, is_val)) = apf107_data.apf_only(iyear, month, iday) {
+        f107_daily = f107_d;
+        f107pd = f107_pd;
+        f107_81 = f107_81_val;
+        f107_365 = f107_365_val;
+        iap_daily = iap_d;
+        isdate = is_val as i32;
     }
     
     let mut f107d = cov;
@@ -1026,10 +1017,10 @@ pub fn iri_sub(
             }
         }
         
-        let zfof2 = unsafe { crate::ffi::fout_c(modip, lati, longi, hourut, ff0.as_ptr()) };
-        let fof2n = unsafe { crate::ffi::fout_c(modip, lati, longi, hourut, ff0n.as_ptr()) };
-        let zm3000 = unsafe { crate::ffi::xmout_c(modip, lati, longi, hourut, xm0.as_ptr()) };
-        let xm300n = unsafe { crate::ffi::xmout_c(modip, lati, longi, hourut, xm0n.as_ptr()) };
+        let zfof2 = crate::irifun_utils::fout(modip, lati, longi, hourut, &ff0);
+        let fof2n = crate::irifun_utils::fout(modip, lati, longi, hourut, &ff0n);
+        let zm3000 = crate::irifun_utils::xmout(modip, lati, longi, hourut, &xm0);
+        let xm300n = crate::irifun_utils::xmout(modip, lati, longi, hourut, &xm0n);
         
         let midm = if month == 2 { 14 } else { 15 };
         if iday < midm {
@@ -1057,8 +1048,8 @@ pub fn iri_sub(
     let estorm_on = jf[34] && jf[14];
     
     let mut indap = [0_i32; 13];
-    unsafe {
-        crate::ffi::apf_c(isdate, hourut, indap.as_mut_ptr());
+    if let Some(ap_vals) = apf107_data.apf(isdate as usize, hourut) {
+        indap = ap_vals;
     }
     let index_3h_ap = indap[12];
     let mut xkp = 3.0_f32;
@@ -1069,27 +1060,22 @@ pub fn iri_sub(
     if fstorm_on && indap[0] > -1 {
         let icoord = 1;
         let kut = hourut as i32;
-        let mut cglat = 0.0_f32;
-        unsafe {
-            crate::ffi::storm_c(
-                indap.as_ptr(),
-                lati,
-                longi,
-                icoord,
-                &mut cglat,
-                kut,
-                daynr,
-                &mut stormcorr,
-            );
-        }
+        let (cf, rgma) = crate::irifun_utils::storm(
+            &indap,
+            lati,
+            longi,
+            icoord,
+            kut,
+            daynr,
+        );
+        let cglat = rgma;
+        stormcorr = cf;
         fof2s = fof2 * stormcorr;
         nmf2s = 1.24e10 * fof2s * fof2s;
     }
     
     if estorm_on && index_3h_ap > -1 {
-        estormcor = unsafe {
-            crate::ffi::storme_ap_c(daynr, mlat, (index_3h_ap as f32))
-        };
+        estormcor = crate::irifun_utils::storme_ap(daynr, mlat, index_3h_ap as f32);
         if estormcor > -2.0 {
             foes = foe * estormcor;
             nmes = 1.24e10 * foes * foes;
@@ -1103,14 +1089,12 @@ pub fn iri_sub(
         if zmlt < 0.0 || zmlt > 24.0 {
             zmlt = -1.0;
         }
-        unsafe {
-            crate::ffi::auroral_boundary_c(
-                xkp,
-                zmlt,
-                &mut cgmlat,
-                ab_mlat.as_mut_ptr(),
-            );
-        }
+        crate::irifun_utils::auroral_boundary(
+            xkp,
+            zmlt,
+            &mut cgmlat,
+            &mut ab_mlat,
+        );
     }
     
     let mut rlat = lati;
@@ -1155,9 +1139,7 @@ pub fn iri_sub(
             if !jf[35] {
                 ratf = fof2s / foe;
             }
-            hmf2 = unsafe {
-                crate::ffi::hmf2ed_c(magbr, rssn, ratf, xm3000)
-            };
+            hmf2 = crate::irifun_utils::hmf2ed(magbr, rssn, ratf, xm3000);
         } else {
             hmf2 = ahmf2;
             xm3000 = -1.0;
@@ -1167,17 +1149,11 @@ pub fn iri_sub(
         if !jf[35] {
             ratf = fof2s / foe;
         }
-        hmf2 = unsafe {
-            crate::ffi::hmf2ed_c(magbr, rssn, ratf, xm3000)
-        };
+        hmf2 = crate::irifun_utils::hmf2ed(magbr, rssn, ratf, xm3000);
     } else if jf[39] {
-        unsafe {
-            crate::ffi::shamdhmf2_c(rlat, flon, zmonth, rssn, &mut hmf2);
-        }
+        hmf2 = crate::hmf2_coeff::shamdhmf2(rlat, flon, zmonth, rssn);
     } else {
-        unsafe {
-            crate::ffi::model_hmf2_c(iday, month, hourut, modip, longi, f10781, &mut hmf2);
-        }
+        hmf2 = crate::irifun_utils::model_hmf2(iday, month, hourut, modip, longi, f10781, &data_dir);
     }
     
     let cos2 = (mlat * UMR).cos().powi(2);
@@ -1274,21 +1250,13 @@ pub fn iri_sub(
     }
     
     if jf[3] {
-        unsafe {
-            b0 = crate::ffi::b0_98_c(hour, sax200, sux200, nseasn, rssn, longi, modip);
-        }
+        b0 = crate::b0_b1_model::b0_98(hour, sax200, sux200, nseasn, rssn, longi, modip);
         b1 = hpol(hour, 1.9, 2.6, sax200, sux200, 1.0, 1.0);
     } else if jf[30] {
-        unsafe {
-            b0 = crate::ffi::shamdb0d_c(rlat, flon, zmonth, rssn);
-            b1 = crate::ffi::shab1d_c(lati, flon, zmonth, rssn);
-        }
+        b0 = crate::b0_b1_model::shamdb0d(rlat, flon, zmonth, rssn);
+        b1 = crate::b0_b1_model::shab1d(lati, flon, zmonth, rssn);
     } else {
-        let mut grat = 0.0_f32;
-        let mut seax = 0.0_f32;
-        unsafe {
-            crate::ffi::rogul_c(seaday, xhi3, &mut seax, &mut grat);
-        }
+        let (seax, grat) = crate::xe_profile::rogul(seaday as i32, xhi3);
         b1 = hpol(hour, 1.9, 2.6, sax200, sux200, 1.0, 1.0);
         let bcoef = b1 * (b1 * (0.0046 * b1 - 0.0548) + 0.2546) + 0.3606;
         let b0cnew = hmf2 * (1.0 - grat);
@@ -1333,7 +1301,7 @@ pub fn iri_sub(
             nmf1 = if afoF1 < 100.0 { 1.24e10 * afoF1 * afoF1 } else { anmf1 };
         } else {
             oarr[2] = -1.0;
-            fof1 = unsafe { crate::ffi::fof1ed_c(absmbr, rssn, xhi3) };
+            fof1 = crate::xe_profile::fof1ed(absmbr, rssn, xhi3);
             nmf1 = 1.24e10 * fof1 * fof1;
         }
         if hmf1in {
@@ -1341,7 +1309,7 @@ pub fn iri_sub(
         } else {
             oarr[3] = -1.0;
         }
-        c1 = unsafe { crate::ffi::f1_c1_c(absmdp, hour, sax2, sux2) };
+        c1 = crate::xe_profile::f1_c1(absmdp, hour, sax2, sux2);
         
         let mut f1pb = 0.0_f32;
         if f1_ocpro {
@@ -1385,9 +1353,7 @@ pub fn iri_sub(
             depth_val = -depth_val;
         }
         let mut ext = false;
-        unsafe {
-            crate::ffi::tal_c(hdeep, depth_val, width, dlndh, &mut ext, e_arr.as_mut_ptr());
-        }
+        crate::xe_profile::tal(hdeep, depth_val, width, dlndh, &mut ext, &mut e_arr);
         if ext {
             width = 0.0;
         }
@@ -1397,7 +1363,7 @@ pub fn iri_sub(
     }
     
     let hmex = hme - 9.0;
-    nmd = unsafe { crate::ffi::xmded_c(xhi1, rssn, 4.0e8) };
+    nmd = crate::e_layer::xmded(xhi1, rssn, 4.0e8);
     hmd = hpol(hour, 81.0, 88.0, sax80, sux80, 1.0, 1.0);
     let f1_p = hpol(hour, 0.02 + 0.03 / dela, 0.05, sax80, sux80, 1.0, 1.0);
     let f2_p = hpol(hour, 4.6, 4.5, sax80, sux80, 1.0, 1.0);
@@ -1430,17 +1396,15 @@ pub fn iri_sub(
         let f5sw_vals = [0.0_f32, 0.5, 1.0, 0.0, 0.0];
         let f6wa_vals = [0.0_f32, 0.0, 0.0, 0.5, 1.0];
         for step_idx in 0..5 {
-            unsafe {
-                crate::ffi::dregion_c(
+                crate::d_region::dregion(
                     xhi1,
                     month,
                     f107d,
                     vkp,
                     f5sw_vals[step_idx],
                     f6wa_vals[step_idx],
-                    elg.as_mut_ptr(),
+                    &mut elg,
                 );
-            }
             for ii in 0..11 {
                 if ii < 7 {
                     ddens[step_idx][ii] = 10.0_f32.powf(elg[ii] + 6.0);
@@ -1561,16 +1525,14 @@ pub fn iri_sub(
                             dep = -depth;
                         }
                         let mut ext_val = false;
-                        unsafe {
-                            crate::ffi::tal_c(
+                            crate::xe_profile::tal(
                                 hdeep,
                                 dep,
                                 width,
                                 dlndh,
                                 &mut ext_val,
-                                e_arr.as_mut_ptr(),
+                                &mut e_arr,
                             );
-                        }
                         if !ext_val {
                             break 'search_loop;
                         } else {
@@ -1696,26 +1658,24 @@ pub fn iri_sub(
         let hv1r = hme + width;
         let hv2r = hme + hdeep;
         let mut iqu_c = 0;
-        unsafe {
-            crate::ffi::inilay_c(
-                fnight,
-                f1reg,
-                nmf2s,
-                nmf1,
-                nmes,
-                vner,
-                hmf2,
-                hmf1m,
-                hme,
-                hv1r,
-                hv2r,
-                hhalf,
-                hxl.as_mut_ptr(),
-                scl.as_mut_ptr(),
-                amp.as_mut_ptr(),
-                &mut iqu_c,
-            );
-        }
+        crate::xe_profile::inilay(
+            fnight,
+            f1reg,
+            nmf2s,
+            nmf1,
+            nmes,
+            vner,
+            hmf2,
+            hmf1m,
+            hme,
+            hv1r,
+            hv2r,
+            hhalf,
+            &mut hxl,
+            &mut scl,
+            &mut amp,
+            &mut iqu_c,
+        );
         hxl1_choice = iqu_c;
     }
     
@@ -1820,8 +1780,8 @@ pub fn iri_sub(
     let mut sec = hourut * 3600.0;
     
     if !notem || (!noion && rbtt) {
-        unsafe {
-            crate::ffi::apfmsis_c(isdate, hourut, iapo.as_mut_ptr());
+        if let Some(apf_msis_vals) = apf107_data.apfmsis(isdate as usize, hourut) {
+            iapo = apf_msis_vals;
         }
         println!("RUST iapo: {:?}", iapo);
         let mut swmi = [1.0_f32; 25];
@@ -1831,23 +1791,21 @@ pub fn iri_sub(
         } else {
             swmi[8] = -1.0;
         }
-        unsafe {
-            crate::ffi::tselec_c(swmi.as_ptr());
-            crate::ffi::gtd7_c(
-                iyd,
-                sec,
-                hequi,
-                lati,
-                longi,
-                hour,
-                f10781obs,
-                f107yobs,
-                iapo.as_ptr() as *const f32,
-                0,
-                d_msis.as_mut_ptr(),
-                t_msis.as_mut_ptr(),
-            );
-        }
+        cira_model.tselec(&swmi);
+        cira_model.gtd7(
+            iyd,
+            sec,
+            hequi,
+            lati,
+            longi,
+            hour,
+            f10781obs,
+            f107yobs,
+            &iapo,
+            0,
+            &mut d_msis,
+            &mut t_msis,
+        );
         tn120 = t_msis[1];
     }
     
@@ -1877,30 +1835,26 @@ pub fn iri_sub(
         ahh[2] = hpol(hour, hmaxd, hmaxn, sax200, sux200, 1.0, 1.0);
         let tmaxd = 800.0 * (-((mlat / 33.0).powi(2))).exp() + 1500.0;
         let secni = (24.0 - longi / 15.0) * 3600.0;
-        unsafe {
-            crate::ffi::gtd7_c(
-                iyd,
-                secni,
-                hmaxn,
-                lati,
-                longi,
-                0.0,
-                f10781obs,
-                f107yobs,
-                iapo.as_ptr() as *const f32,
-                0,
-                d_msis.as_mut_ptr(),
-                t_msis.as_mut_ptr(),
-            );
-        }
+        cira_model.gtd7(
+            iyd,
+            secni,
+            hmaxn,
+            lati,
+            longi,
+            0.0,
+            f10781obs,
+            f107yobs,
+            &iapo,
+            0,
+            &mut d_msis,
+            &mut t_msis,
+        );
         let tmaxn = t_msis[1];
         ate[2] = hpol(hour, tmaxd, tmaxn, sax200, sux200, 1.0, 1.0);
         
         if jf[22] {
             let mut tea = [0.0_f32; 4];
-            unsafe {
-                crate::ffi::teba_c(magbr, hour, nseasn, tea.as_mut_ptr());
-            }
+            crate::irifun_utils::teba(magbr, hour, nseasn, &mut tea);
             ahh[3] = 300.0;
             ahh[4] = 400.0;
             ahh[5] = 600.0;
@@ -1925,18 +1879,16 @@ pub fn iri_sub(
             let isa = if jf[41] { 1 } else { 0 };
             let mut teva = [0.0_f32; 5];
             let mut sdteva = [0.0_f32; 5];
-            println!("RUST: elteik_c inputs: isa={}, invdip_old={}, xmlt={}, daynr={}, pf107obs={}", isa, invdip_old, xmlt, daynr, pf107obs);
-            unsafe {
-                crate::ffi::elteik_c(
-                    isa,
-                    invdip_old,
-                    xmlt,
-                    daynr as f32,
-                    pf107obs,
-                    teva.as_mut_ptr(),
-                    sdteva.as_mut_ptr(),
-                );
-            }
+            println!("RUST: elteik inputs: isa={}, invdip_old={}, xmlt={}, daynr={}, pf107obs={}", isa, invdip_old, xmlt, daynr, pf107obs);
+            crate::irifun_utils::elteik(
+                isa,
+                invdip_old,
+                xmlt,
+                daynr as f32,
+                pf107obs,
+                &mut teva,
+                &mut sdteva,
+            );
             println!("RUST: elteik_c outputs: teva={:?}, sdteva={:?}", teva, sdteva);
             for ijk in 3..=7 {
                 ate[ijk] = teva[ijk - 3];
@@ -1947,7 +1899,7 @@ pub fn iri_sub(
             for i in 1..=2 {
                 let xnar_i = oarr[i + 13];
                 if xnar_i > 0.0 {
-                    ate[i + 2] = unsafe { crate::ffi::tede_c(ahh[i + 2], xnar_i, -cov) };
+                    ate[i + 2] = crate::irifun_utils::tede(ahh[i + 2], xnar_i, -cov);
                 }
             }
             oarr[14] = -1.0;
@@ -1955,22 +1907,20 @@ pub fn iri_sub(
         }
         
         // Enforce Te > Tn at ahh[2]
-        unsafe {
-            crate::ffi::gtd7_c(
-                iyd,
-                sec,
-                ahh[2],
-                lati,
-                longi,
-                hour,
-                f10781obs,
-                f107yobs,
-                iapo.as_ptr() as *const f32,
-                0,
-                d_msis.as_mut_ptr(),
-                t_msis.as_mut_ptr(),
-            );
-        }
+        cira_model.gtd7(
+            iyd,
+            sec,
+            ahh[2],
+            lati,
+            longi,
+            hour,
+            f10781obs,
+            f107yobs,
+            &iapo,
+            0,
+            &mut d_msis,
+            &mut t_msis,
+        );
         let tnahh2 = t_msis[1];
         println!("RUST: tnahh2={}, ate[2] (before clamp)={}, ate[1]={}", tnahh2, ate[2], ate[1]);
         if ate[2] < tnahh2 {
@@ -1979,22 +1929,20 @@ pub fn iri_sub(
         let mut stte1 = (ate[2] - ate[1]) / (ahh[2] - ahh[1]);
         for i in 2..=6 {
             let orig_ate_i_plus_1 = ate[i + 1];
-            unsafe {
-                crate::ffi::gtd7_c(
-                    iyd,
-                    sec,
-                    ahh[i + 1],
-                    lati,
-                    longi,
-                    hour,
-                    f10781obs,
-                    f107yobs,
-                    iapo.as_ptr() as *const f32,
-                    0,
-                    d_msis.as_mut_ptr(),
-                    t_msis.as_mut_ptr(),
-                );
-            }
+            cira_model.gtd7(
+                iyd,
+                sec,
+                ahh[i + 1],
+                lati,
+                longi,
+                hour,
+                f10781obs,
+                f107yobs,
+                &iapo,
+                0,
+                &mut d_msis,
+                &mut t_msis,
+            );
             let tnahhi = t_msis[1];
             if ate[i + 1] < tnahhi {
                 ate[i + 1] = tnahhi;
@@ -2014,22 +1962,20 @@ pub fn iri_sub(
         
         hs = 200.0_f32;
         xsm[1] = hs;
-        unsafe {
-            crate::ffi::gtd7_c(
-                iyd,
-                sec,
-                hs,
-                lati,
-                longi,
-                hour,
-                f10781obs,
-                f107yobs,
-                iapo.as_ptr() as *const f32,
-                0,
-                d_msis.as_mut_ptr(),
-                t_msis.as_mut_ptr(),
-            );
-        }
+        cira_model.gtd7(
+            iyd,
+            sec,
+            hs,
+            lati,
+            longi,
+            hour,
+            f10781obs,
+            f107yobs,
+            &iapo,
+            0,
+            &mut d_msis,
+            &mut t_msis,
+        );
         tnhs = t_msis[1];
         
         if jf[47] {
@@ -2040,17 +1986,15 @@ pub fn iri_sub(
             xsm[5] = 850.0;
             let mut tiv = [0.0_f32; 4];
             let mut sigtv = [0.0_f32; 4];
-            unsafe {
-                crate::ffi::iontif_c(
-                    1,
-                    invdip_old,
-                    xmlt,
-                    daynr as f32,
-                    pf107obs,
-                    tiv.as_mut_ptr(),
-                    sigtv.as_mut_ptr(),
-                );
-            }
+            crate::irifun_utils::iontif(
+                1,
+                invdip_old,
+                xmlt,
+                daynr as f32,
+                pf107obs,
+                &mut tiv,
+                &mut sigtv,
+            );
             mm_ti[1] = (tiv[0] - tnhs) / (xsm[2] - xsm[1]);
             mm_ti[2] = (tiv[1] - tiv[0]) / (xsm[3] - xsm[2]);
             mm_ti[3] = (tiv[2] - tiv[1]) / (xsm[4] - xsm[3]);
@@ -2074,22 +2018,20 @@ pub fn iri_sub(
             }
             
             let ten1 = crate::irifun_utils::booker1(xsm1, 5, ate1, &ahh[1..], &stte[1..], &dte);
-            unsafe {
-                crate::ffi::gtd7_c(
-                    iyd,
-                    secni,
-                    xsm1,
-                    lati,
-                    longi,
-                    0.0,
-                    f10781obs,
-                    f107yobs,
-                    iapo.as_ptr() as *const f32,
-                    0,
-                    d_msis.as_mut_ptr(),
-                    t_msis.as_mut_ptr(),
-                );
-            }
+            cira_model.gtd7(
+                iyd,
+                secni,
+                xsm1,
+                lati,
+                longi,
+                0.0,
+                f10781obs,
+                f107yobs,
+                &iapo,
+                0,
+                &mut d_msis,
+                &mut t_msis,
+            );
             let tnn1 = t_msis[1];
             
             let mut final_ten1 = ten1;
@@ -2182,18 +2124,51 @@ pub fn iri_sub(
                     let mut elede_val = -9.0_f32;
                     if hxl1_choice < 2 {
                         // Lay-function evaluation
-                        elede_val = unsafe {
-                            crate::ffi::xen_c(
-                                height,
-                                hmf2,
-                                nmf2s,
-                                hme,
-                                4,
-                                hxl.as_ptr(),
-                                scl.as_ptr(),
-                                amp.as_ptr(),
-                            )
+                        let profile = crate::xe_profile::XeProfile {
+                            hmf2,
+                            xnmf2: nmf2s,
+                            hmf1: actual_hmf1,
+                            f1reg,
+                            b0,
+                            b1,
+                            c1,
+                            hz,
+                            t: t_val,
+                            hst,
+                            hme,
+                            xnme: nmes,
+                            hef,
+                            night: enight,
+                            e: e_arr,
+                            hmd,
+                            xnmd: nmd,
+                            hdx,
+                            d1,
+                            xkk,
+                            fp30,
+                            fp3u,
+                            fp1,
+                            fp2,
+                            beta,
+                            eta,
+                            delta,
+                            zeta,
+                            b2top,
+                            itopn,
+                            tcor1,
+                            tcor2,
                         };
+                        elede_val = crate::xe_profile::xen(
+                            height,
+                            hmf2,
+                            nmf2s,
+                            hme,
+                            4,
+                            &hxl,
+                            &scl,
+                            &amp,
+                            &profile,
+                        );
                     }
                     elede_val
                 } else {
@@ -2214,8 +2189,9 @@ pub fn iri_sub(
                     if !dreg && height <= 140.0 {
                         let mut edens = 0.0_f32;
                         let mut ierror = 0_i32;
-                        unsafe {
-                            crate::ffi::f00_c(height, lati, daynr, xhi_step, f107d, &mut edens, &mut ierror);
+                        if let Ok((edens_val, ierror_val)) = crate::iridreg::f00(height, lati, daynr, xhi_step, f107d) {
+                            edens = edens_val;
+                            ierror = ierror_val;
                         }
                         if ierror == 0 || ierror == 2 {
                             density = edens;
@@ -2234,22 +2210,20 @@ pub fn iri_sub(
                     if height <= hte && height >= hta {
                         let mut d_msis_t = [0.0_f32; 9];
                         let mut t_msis_t = [0.0_f32; 2];
-                        unsafe {
-                            crate::ffi::gtd7_c(
-                                iyd,
-                                sec,
-                                height,
-                                lati,
-                                longi,
-                                hour,
-                                f10781obs,
-                                f107yobs,
-                                iapo.as_ptr() as *const f32,
-                                0,
-                                d_msis_t.as_mut_ptr(),
-                                t_msis_t.as_mut_ptr(),
-                            );
-                        }
+                        cira_model.gtd7(
+                            iyd,
+                            sec,
+                            height,
+                            lati,
+                            longi,
+                            hour,
+                            f10781obs,
+                            f107yobs,
+                            &iapo,
+                            0,
+                            &mut d_msis_t,
+                            &mut t_msis_t,
+                        );
                         let tnh = t_msis_t[1];
                         let mut tih = tnh;
                         if height > hs {
@@ -2302,19 +2276,17 @@ pub fn iri_sub(
                                         let mut xic_h = 0.0_f32;
                                         let mut xic_he = 0.0_f32;
                                         let mut xic_n = 0.0_f32;
-                                        unsafe {
-                                            crate::ffi::calion_c(
-                                                invdip,
-                                                xmlt,
-                                                height,
-                                                daynr as f32,
-                                                pf107obs,
-                                                &mut xic_o,
-                                                &mut xic_h,
-                                                &mut xic_he,
-                                                &mut xic_n,
-                                            );
-                                        }
+                                        crate::ioncom::calion(
+                                            invdip,
+                                            xmlt,
+                                            height,
+                                            daynr,
+                                            pf107obs,
+                                            &mut xic_o,
+                                            &mut xic_h,
+                                            &mut xic_he,
+                                            &mut xic_n,
+                                        );
                                         rox = xic_o * 100.0;
                                         rhx = xic_h * 100.0;
                                         rnx = xic_n * 100.0;
@@ -2324,22 +2296,20 @@ pub fn iri_sub(
                                     } else {
                                         let mut d_msis_chem = [0.0_f32; 9];
                                         let mut t_msis_chem = [0.0_f32; 2];
-                                        unsafe {
-                                            crate::ffi::gtd7_c(
-                                                iyd,
-                                                sec,
-                                                height,
-                                                lati,
-                                                longi,
-                                                hour,
-                                                f10781obs,
-                                                f107yobs,
-                                                iapo.as_ptr() as *const f32,
-                                                48,
-                                                d_msis_chem.as_mut_ptr(),
-                                                t_msis_chem.as_mut_ptr(),
-                                            );
-                                        }
+                                         cira_model.gtd7(
+                                             iyd,
+                                             sec,
+                                             height,
+                                             lati,
+                                             longi,
+                                             hour,
+                                             f10781obs,
+                                             f107yobs,
+                                             &iapo,
+                                             48,
+                                             &mut d_msis_chem,
+                                             &mut t_msis_chem,
+                                         );
                                         let xn4s = 0.5 * d_msis_chem[7];
                                         let edens = elede / 1e6;
                                         let jprint = if jf[37] { 0 } else { 1 };
@@ -2352,35 +2322,33 @@ pub fn iri_sub(
                                         let mut den_n2d = 0.0_f32;
                                         let mut inewt = 0_i32;
                                         
-                                        unsafe {
-                                            crate::ffi::chemion_c(
-                                                jprint,
-                                                height,
-                                                f107yobs,
-                                                f10781obs,
-                                                teh,
-                                                tih,
-                                                tnh,
-                                                d_msis_chem[1],
-                                                d_msis_chem[3],
-                                                d_msis_chem[2],
-                                                d_msis_chem[0],
-                                                d_msis_chem[6],
-                                                -1.0,
-                                                xn4s,
-                                                edens,
-                                                -1.0,
-                                                xhi_step,
-                                                &mut ro,
-                                                &mut ro2,
-                                                &mut rno,
-                                                &mut rn2,
-                                                &mut rn,
-                                                &mut den_no,
-                                                &mut den_n2d,
-                                                &mut inewt,
-                                            );
-                                        }
+                                        crate::irifun_utils::chemion(
+                                             jprint,
+                                             height,
+                                             f107yobs,
+                                             f10781obs,
+                                             teh,
+                                             tih,
+                                             tnh,
+                                             d_msis_chem[1],
+                                             d_msis_chem[3],
+                                             d_msis_chem[2],
+                                             d_msis_chem[0],
+                                             d_msis_chem[6],
+                                             -1.0,
+                                             xn4s,
+                                             edens,
+                                             -1.0,
+                                             xhi_step,
+                                             &mut ro,
+                                             &mut ro2,
+                                             &mut rno,
+                                             &mut rn2,
+                                             &mut rn,
+                                             &mut den_no,
+                                             &mut den_n2d,
+                                             &mut inewt,
+                                         );
                                         if inewt > 0 {
                                             let sumion = edens / 100.0;
                                             rox = ro / sumion;
@@ -2441,8 +2409,9 @@ pub fn iri_sub(
             outf[((10 + ii) * 20 + 13) as usize] = -1.0;
             let mut edens = 0.0_f32;
             let mut ierror = 0_i32;
-            unsafe {
-                crate::ffi::f00_c(htemp, lati, daynr, xhi1, f107d, &mut edens, &mut ierror);
+            if let Ok((edens_val, ierror_val)) = crate::iridreg::f00(htemp, lati, daynr, xhi1, f107d) {
+                edens = edens_val;
+                ierror = ierror_val;
             }
             if ierror == 0 || ierror == 2 {
                 outf[((10 + ii) * 20 + 13) as usize] = edens;
@@ -2457,14 +2426,8 @@ pub fn iri_sub(
     
     let mut drift = -1.0_f32;
     if jf[20] && magbr.abs() < 25.0 {
-        let mut fjm = [0.0_f32; 59 * 25 * 4 * 11];
-        let mut jsea = 0_i32;
-        let mut jf107 = 0_i32;
-        unsafe {
-            crate::ffi::vfjmodelrocstart_c(fjm.as_mut_ptr());
-            crate::ffi::vfjmodelrocinit_c(f107d, daynr, &mut jsea, &mut jf107);
-            crate::ffi::vfjmodelroc_c(fjm.as_ptr(), hour, longi, jsea, jf107, &mut drift);
-        }
+        let (jsea, jf107) = rocdrift_model.vfjmodelrocinit(f107d, daynr);
+        drift = rocdrift_model.vfjmodelroc(hour, longi, jsea, jf107);
     }
     
     let mut spreadf = -1.0_f32;
@@ -2480,15 +2443,7 @@ pub fn iri_sub(
                 }
             }
             let mut osfbr = [0.0_f32; 25];
-            unsafe {
-                crate::ffi::spreadf_brazil_c(
-                    daynr1,
-                    idayy,
-                    f107d,
-                    lati,
-                    osfbr.as_mut_ptr(),
-                );
-            }
+            crate::spreadf_brazil::spreadf_brazil(daynr1, idayy, f107d, lati, &mut osfbr);
             let ispf = ((spfhour - 17.75) / 0.5) as i32 + 1;
             if ispf > 0 && ispf < 26 {
                 spreadf = osfbr[(ispf - 1) as usize];
@@ -2607,18 +2562,31 @@ fn hmid_val() -> f32 {
 }
 
 fn grat_from_rogul(seaday: f32, xhi3: f32) -> f32 {
-    let mut seax = 0.0_f32;
-    let mut grat = 0.0_f32;
-    unsafe {
-        crate::ffi::rogul_c(seaday, xhi3, &mut seax, &mut grat);
-    }
+    let (_, grat) = crate::xe_profile::rogul(seaday as i32, xhi3);
     grat
 }
 
 fn ohzden(l: f32, lat: f32) -> f32 {
-    unsafe { crate::ffi::ohzden_c(l, lat) }
+    let y1 = 4.4693 - 0.4903 * l;
+    let y1_clamped = if y1.abs() > 38.0 { y1.signum() * 38.0 } else { y1 };
+    let xneq = 10.0_f32.powf(y1_clamped);
+    let xinv = (1.0 / l).sqrt().acos() / UMR;
+    let y2 = 1.01 * lat / xinv;
+    let y3 = (PI * y2 / 2.0).cos();
+    let y4 = y3.powf(-0.75);
+    1.0e6 * xneq * y4
 }
 
 fn gallden(l: f32, day: f32, rz12: f32) -> f32 {
-    unsafe { crate::ffi::gallden_c(l, day, rz12) }
+    let dumr = PI / 182.5;
+    let y1 = -0.79 * l + 5.3;
+    let y2 = dumr * (day + 9.0);
+    let y5 = 0.15 * (y2.cos() - 0.5 * (2.0 * y2).cos());
+    let y6 = y5 + 0.00127 * rz12 - 0.0635;
+    let y7 = y6 * (-(l - 2.0) / 1.5).exp();
+    let mut xlog_ne = y1 + y7;
+    if xlog_ne.abs() > 38.0 {
+        xlog_ne = xlog_ne.signum() * 38.0;
+    }
+    10.0_f32.powf(xlog_ne + 6.0)
 }

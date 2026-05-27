@@ -774,3 +774,87 @@ pub fn shab1d(flat: f32, flon: f32, t: f32, rz: f32) -> f32 {
     
     schnevpd_calc(flat, flon, t, &bint, &bext, kint, lint, kext, lext, kmax, &FN_ARR, &CONST)
 }
+
+pub fn b0_98(
+    hour: f32,
+    sax: f32,
+    sux: f32,
+    nseasn: i32,
+    r: f32,
+    zlo: f32,
+    zmodip: f32,
+) -> f32 {
+    let b0f: [f32; 48] = [
+        201.0, 68.0, 210.0, 61.0, 192.0, 68.0, 199.0, 67.0, 240.0, 80.0, 245.0, 83.0,
+        233.0, 71.0, 230.0, 65.0, 108.0, 65.0, 142.0, 81.0, 110.0, 68.0, 77.0, 75.0,
+        124.0, 98.0, 164.0, 100.0, 120.0, 94.0, 96.0, 112.0, 78.0, 81.0, 94.0, 84.0,
+        81.0, 81.0, 65.0, 70.0, 102.0, 87.0, 127.0, 91.0, 109.0, 88.0, 81.0, 78.0
+    ];
+    let zx = [45.0, 72.0, 90.0, 108.0, 135.0];
+    let dd = [3.0, 3.0, 3.0, 3.0, 3.0];
+    
+    let mut jseasn = nseasn + 2;
+    if jseasn > 4 {
+        jseasn -= 4;
+    }
+    
+    let zz = zmodip + 90.0;
+    let zz0 = 0.0;
+    
+    let get_b0f = |isd: usize, season: usize, ir: usize, isl: usize| -> f32 {
+        let idx = (isl - 1) * 16 + (ir - 1) * 8 + (season - 1) * 2 + (isd - 1);
+        b0f[idx]
+    };
+    
+    let mut bfr = [[[0.0_f32; 3]; 2]; 2];
+    for isl in 1..=3 {
+        for isd in 1..=2 {
+            let b0f_nseasn_1 = get_b0f(isd, nseasn as usize, 1, isl);
+            let b0f_nseasn_2 = get_b0f(isd, nseasn as usize, 2, isl);
+            bfr[isd - 1][0][isl - 1] = b0f_nseasn_1 + (b0f_nseasn_2 - b0f_nseasn_1) / 90.0 * (r - 10.0);
+            
+            let b0f_jseasn_1 = get_b0f(isd, jseasn as usize, 1, isl);
+            let b0f_jseasn_2 = get_b0f(isd, jseasn as usize, 2, isl);
+            bfr[isd - 1][1][isl - 1] = b0f_jseasn_1 + (b0f_jseasn_2 - b0f_jseasn_1) / 90.0 * (r - 10.0);
+        }
+    }
+    
+    let hpol_helper = |hour: f32, dayval: f32, nitval: f32, sax: f32, sux: f32| -> f32 {
+        crate::irisub::hpol(hour, dayval, nitval, sax, sux, 1.0, 1.0)
+    };
+    
+    let mut bfd = [[0.0_f32; 3]; 2];
+    for isl in 1..=3 {
+        for iss in 1..=2 {
+            let dayval = bfr[0][iss - 1][isl - 1];
+            let nitval = bfr[1][iss - 1][isl - 1];
+            bfd[iss - 1][isl - 1] = hpol_helper(hour, dayval, nitval, sax, sux);
+        }
+    }
+    
+    let zx1 = bfd[1][2];
+    let zx2 = bfd[1][1];
+    let mut zx3 = bfd[0][0];
+    if zlo > 200.0 && zlo < 320.0 {
+        zx3 = bfd[1][0];
+    }
+    let zx4 = bfd[0][1];
+    let zx5 = bfd[0][2];
+    
+    let mut g = [0.0_f32; 6];
+    g[0] = 0.0;
+    g[1] = (zx2 - zx1) / 27.0;
+    g[2] = (zx3 - zx2) / 18.0;
+    g[3] = (zx4 - zx3) / 18.0;
+    g[4] = (zx5 - zx4) / 27.0;
+    g[5] = 0.0;
+    
+    let mut sum = zx1;
+    for i in 0..5 {
+        let aa = crate::irifun_utils::eptr(zz, dd[i], zx[i]);
+        let bb = crate::irifun_utils::eptr(zz0, dd[i], zx[i]);
+        let dsum = (g[i + 1] - g[i]) * (aa - bb) * dd[i];
+        sum += dsum;
+    }
+    sum
+}

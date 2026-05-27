@@ -1,27 +1,15 @@
 # 2. Porting Documentation
 
-This section provides the most rigorous and detailed descriptions of the decisions made during the architecture and the porting of Fortran to Rust via FFI.
+This section provides the details of the porting process from Fortran 77 to safe, pure Rust.
 
-## Options and Trade-Offs
+## Porting Strategy
 
-When porting a 3MB Fortran 77 project, we have a few options:
-1. **Full Line-by-Line Translation**: Takes a significant amount of time and is highly prone to subtle floating-point truncation regressions.
-2. **Automated Transpilation (f2c -> c2rust)**: Fast, but results in thousands of lines of unmaintainable `unsafe` code with raw pointers.
-3. **Incremental FFI (Chosen Approach)**: We implemented an architectural shell where Rust drives the Fortran code natively.
+The codebase was ported incrementally from Fortran to Rust:
+1. **Side-by-Side FFI Testing**: Initially, a Fortran compilation and C FFI bridge was established. Subroutines were translated to Rust one by one and checked for numerical equivalence against the original Fortran implementation under strict tolerances.
+2. **Full Translation**: After validating all subroutines (including IGRF, CIRA, Rocdrift, CCIR/URSI data parsers, and all physical models like electron temperature and ion composition), we replaced all remaining FFI calls with native Rust implementations.
+3. **Fortran Removal**: The Fortran source code, FFI bindings, and build-time Fortran compiler settings were entirely removed.
 
-### Architectural Decisions
-
-We used `iso_c_binding` in Fortran to expose subroutine signatures:
-
-```fortran
-subroutine c_iri_sub(...) bind(C, name="iri_sub_c")
-```
-
-This prevents name-mangling problems across different OS/CPU targets. Rust uses a standard `extern "C"` block with `cc/cmake` build scripts to statically link against `libiri.a`.
-
-### FFI Details and Edge Cases
-
-- **Multidimensional Arrays**: Fortran passes multidimensional arrays as 1D column-major blocks. `outf_c(20, 1000)` had to be dynamically flattened and expanded in Rust to maintain accurate column-indexing natively (e.g., `outf[col * 20 + row]`).
-- **File Parsing**: We unified `src/data` out of the python specific packaging logic directly to the source level, using exact OS path mapping to fix deep `open(12, ...)` statements nested inside `irifun.for`.
-
-By setting up this FFI, developers can now incrementally port individual subroutines (e.g., `igrf.for` or `cira.for`) into safe Rust.
+## Architecture and Numerical Precision
+- **Multidimensional Arrays**: Fortran passes multidimensional arrays as flat column-major blocks. The Rust codebase uses standard layouts and flat array indexing to match the original behavior and data layout.
+- **File Parsing**: Handled natively in Rust with custom data readers that parse the data files in `src/data/` exactly as the original Fortran code did.
+- **Numerical Correctness**: The pure Rust implementation has been verified to match original Fortran calculations within a strict `1e-4` relative tolerance across multiple regression test scenarios.

@@ -1,4 +1,3 @@
-pub mod ffi;
 pub mod driver;
 pub mod igrf_coeff;
 pub mod igrf;
@@ -19,6 +18,11 @@ pub mod iritec;
 pub mod firi_data;
 
 pub mod b0_b1_model;
+pub mod hmf2_coeff;
+pub mod storme_coeff;
+pub mod calion_coeff;
+pub mod spreadf_brazil;
+pub mod cormag_data;
 pub mod irisub;
 
 

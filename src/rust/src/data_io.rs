@@ -105,6 +105,173 @@ impl Apf107Data {
         
         Ok(Self { aap, af107, n: n as i32 })
     }
+
+    pub fn apf_only(&self, iyyyy: i32, imn: i32, id: i32) -> Option<(f32, f32, f32, f32, i32, usize)> {
+        let iybeg = 1958;
+        if iyyyy < iybeg {
+            return None;
+        }
+        
+        let mut is_val = 0;
+        for i in iybeg..iyyyy {
+            let mut nyd = 365;
+            if i % 4 == 0 {
+                nyd = 366;
+            }
+            is_val += nyd;
+        }
+        
+        let mut lm = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if iyyyy % 4 == 0 {
+            lm[1] = 29;
+        }
+        for i in 0..(imn as usize - 1).min(11) {
+            is_val += lm[i];
+        }
+        
+        is_val += id;
+        
+        if is_val as i32 > self.n {
+            return None;
+        }
+        
+        let is_idx = is_val as usize - 1; // Convert 1-based to 0-based
+        let f107d = self.af107[is_idx][0];
+        let mut f107pd = f107d;
+        if is_idx > 0 {
+            f107pd = self.af107[is_idx - 1][0];
+        }
+        let mut f107_81 = self.af107[is_idx][1];
+        if f107_81 < -4.0 {
+            f107_81 = f107d;
+        }
+        let mut f107_365 = self.af107[is_idx][2];
+        if f107_365 < -4.0 {
+            f107_365 = f107d;
+        }
+        let iapda = self.aap[is_idx][8];
+        
+        Some((f107d, f107pd, f107_81, f107_365, iapda, is_val as usize))
+    }
+
+    pub fn apf(&self, isdate: usize, hour: f32) -> Option<[i32; 13]> {
+        if isdate == 0 {
+            return None;
+        }
+        let is_idx = isdate - 1;
+        let mut ihour = (hour / 3.0) as usize + 1;
+        if ihour > 8 {
+            ihour = 8;
+        }
+        
+        if isdate * 8 + ihour < 13 {
+            return None;
+        }
+        
+        let mut iap = [-1; 13];
+        let j1 = 13 - ihour;
+        for i in 0..ihour {
+            let iapi = self.aap[is_idx][i];
+            if iapi < -2 {
+                return None;
+            }
+            iap[j1 + i] = iapi;
+        }
+        
+        if ihour > 4 {
+            for i in 0..j1 {
+                let iapi = self.aap[is_idx - 1][8 - j1 + i];
+                if iapi < -2 {
+                    return None;
+                }
+                iap[i] = iapi;
+            }
+        } else {
+            let j2 = 5 - ihour;
+            for i in 0..8 {
+                let iapi = self.aap[is_idx - 1][i];
+                if iapi < -2 {
+                    return None;
+                }
+                iap[j2 + i] = iapi;
+            }
+            for i in 0..j2 {
+                let iapi = self.aap[is_idx - 2][8 - j2 + i];
+                if iapi < -2 {
+                    return None;
+                }
+                iap[i] = iapi;
+            }
+        }
+        Some(iap)
+    }
+
+    pub fn apfmsis(&self, isdate: usize, hour: f32) -> Option<[f32; 7]> {
+        if isdate == 0 {
+            return None;
+        }
+        let is_idx = isdate - 1;
+        let mut ihour = (hour / 3.0) as usize + 1;
+        if ihour > 8 {
+            ihour = 8;
+        }
+        
+        let daily_ap = self.aap[is_idx][8] as f32;
+        
+        if (isdate - 1) * 8 + ihour < 20 {
+            return None;
+        }
+        
+        let mut iap = [0; 20];
+        let ihour_i = ihour as i32;
+        let j1 = ihour_i + 1;
+        for i in 1..=ihour_i {
+            iap[(j1 - i - 1) as usize] = self.aap[is_idx][(i - 1) as usize];
+        }
+        
+        let j1 = ihour_i + 9;
+        for i in 1..=8 {
+            iap[(j1 - i - 1) as usize] = self.aap[is_idx - 1][(i - 1) as usize];
+        }
+        
+        let j1 = ihour_i + 17;
+        let mut j2 = 8 - (20 - ihour_i - 8) + 1;
+        if j2 < 1 {
+            j2 = 1;
+        }
+        for i in j2..=8 {
+            iap[(j1 - i - 1) as usize] = self.aap[is_idx - 2][(i - 1) as usize];
+        }
+        
+        if ihour_i < 4 {
+            let j1 = ihour_i + 25;
+            let mut j2 = 8 - (20 - ihour_i - 16) + 1;
+            if j2 < 1 {
+                j2 = 1;
+            }
+            for i in j2..=8 {
+                iap[(j1 - i - 1) as usize] = self.aap[is_idx - 3][(i - 1) as usize];
+            }
+        }
+        
+        let mut iapo = [0.0; 7];
+        iapo[0] = daily_ap;
+        for i in 0..3 {
+            iapo[i + 1] = iap[i] as f32;
+        }
+        
+        let mut sum1 = 0.0;
+        let mut sum2 = 0.0;
+        for i in 0..8 {
+            sum1 += iap[4 + i] as f32;
+            sum2 += iap[12 + i] as f32;
+        }
+        
+        iapo[5] = sum1 / 8.0;
+        iapo[6] = sum2 / 8.0;
+        
+        Some(iapo)
+    }
 }
 
 fn parse_apf107_line(line: &str) -> Option<([i32; 9], [f32; 3])> {

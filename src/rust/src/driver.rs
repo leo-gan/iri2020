@@ -1,4 +1,3 @@
-use crate::ffi::*;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use std::sync::{Mutex, OnceLock};
@@ -54,12 +53,6 @@ pub fn run_iri(
     let mmdd = month * 100 + day;
     let dhour = hour;
     let dhour_plus_25 = dhour + 25.0;
-
-    unsafe {
-        init_igrf_c();
-        read_ig_rz_c();
-        readapf107_c();
-    }
 
     let heibeg = alt_range[0];
     let heiend = alt_range[1];
