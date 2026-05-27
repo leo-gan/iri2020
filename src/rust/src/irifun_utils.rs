@@ -313,16 +313,16 @@ pub fn tcon(
                 "{} ** OUT OF RANGE **\nThe file IG_RZ.DAT which contains the indices Rz12 and IG12 currently only covers the time period (yymm) : {}-{}",
                 iytmp, iymst, iymend
             );
+            *nmonth = -1;
+            return Err(format!("IG_RZ.DAT out of date index range: {}", iytmp));
         }
-        *nmonth = -1;
-        return Err(format!("IG_RZ.DAT out of date index range: {}", iytmp));
     }
 
     let iyst = iymst / 100;
     let imst = iymst - iyst * 100;
     let num = 2 - imst + (yr - iyst) * 12 + mm;
 
-    let num_idx = ((num - 1) as usize).min(805);
+    let num_idx = (num - 1).clamp(0, 805) as usize;
     rz[0] = indrz[num_idx];
     ig[0] = ionoindx[num_idx];
 
@@ -337,11 +337,12 @@ pub fn tcon(
     let mut midm_mut = midm;
     moda(0, yr, &mut mm_mut, &mut midm_mut, &mut idd1, &mut nrdaym);
 
-    let imm2: i32;
+    let mut imm2: i32;
     if day < midm {
         imm2 = mm - 1;
         let mut idd2 = 0;
         if imm2 < 1 {
+            imm2 = 12;
             idd2 = -16;
         } else {
             let iyy2 = yr;
@@ -354,7 +355,7 @@ pub fn tcon(
             moda(0, iyy2, &mut imm2_mut, &mut midm2_mut, &mut idd2, &mut nrdaym);
         }
 
-        let num_prev_idx = ((num - 2) as usize).min(805);
+        let num_prev_idx = (num - 2).clamp(0, 805) as usize;
         rz[1] = indrz[num_prev_idx];
         ig[1] = ionoindx[num_prev_idx];
         *rsn = (idn - idd2) as f32 / (idd1 - idd2) as f32;
@@ -380,7 +381,7 @@ pub fn tcon(
             moda(0, iyy2, &mut imm2_mut, &mut midm2_mut, &mut idd2, &mut nrdaym);
         }
 
-        let num_next_idx = (num as usize).min(805);
+        let num_next_idx = num.clamp(0, 805) as usize;
         rz[1] = indrz[num_next_idx];
         ig[1] = ionoindx[num_next_idx];
         *rsn = (idn - idd1) as f32 / (idd2 - idd1) as f32;

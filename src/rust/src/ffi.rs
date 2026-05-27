@@ -300,5 +300,273 @@ extern "C" {
         pla_c: *mut c_float,
         plo_c: *mut c_float,
     );
+
+    pub fn fout_c(
+        modip_c: c_float,
+        lati_c: c_float,
+        longi_c: c_float,
+        hourut_c: c_float,
+        ff0_c: *const c_float,
+    ) -> c_float;
+
+    pub fn xmout_c(
+        modip_c: c_float,
+        lati_c: c_float,
+        longi_c: c_float,
+        hourut_c: c_float,
+        xm0_c: *const c_float,
+    ) -> c_float;
+
+    pub fn apf_c(
+        isdate_c: c_int,
+        hourut_c: c_float,
+        indap_c: *mut c_int,
+    );
+
+    pub fn apfmsis_c(
+        isdate_c: c_int,
+        hourut_c: c_float,
+        iapo_c: *mut c_float,
+    );
+
+    pub fn apf_only_c(
+        iyyyy_c: c_int,
+        mm_c: c_int,
+        id_c: c_int,
+        f107d_c: *mut c_float,
+        f107pd_c: *mut c_float,
+        f10781_c: *mut c_float,
+        f107365_c: *mut c_float,
+        iapd_c: *mut c_int,
+        isdate_c: *mut c_int,
+    );
+
+    pub fn storm_c(
+        indap_c: *const c_int,
+        lati_c: c_float,
+        longi_c: c_float,
+        icoord_c: c_int,
+        cglat_c: *mut c_float,
+        kut_c: c_int,
+        daynr_c: c_int,
+        stormcorr_c: *mut c_float,
+    );
+
+    pub fn storme_ap_c(
+        daynr_c: c_int,
+        mlat_c: c_float,
+        ah3_c: c_float,
+    ) -> c_float;
+
+    pub fn auroral_boundary_c(
+        xkp_c: c_float,
+        xmlt_c: c_float,
+        cgmlat_c: *mut c_float,
+        ab_mlat_c: *mut c_float,
+    );
+
+    pub fn shamdhmf2_c(
+        rlat_c: c_float,
+        flon_c: c_float,
+        t_c: c_float,
+        rz_c: c_float,
+        hmf2_c: *mut c_float,
+    );
+
+    pub fn model_hmf2_c(
+        iday_c: c_int,
+        month_c: c_int,
+        ut_c: c_float,
+        modip_c: c_float,
+        longi_c: c_float,
+        f10781_c: c_float,
+        hmf2_c: *mut c_float,
+    );
+
+    pub fn hmf2ed_c(
+        magbr_c: c_float,
+        rssn_c: c_float,
+        ratf_c: c_float,
+        xm3000_c: c_float,
+    ) -> c_float;
+
+    pub fn toph05_c(
+        cov_c: c_float,
+        mlat_c: c_float,
+        hour_c: c_float,
+        hmf2_c: c_float,
+        hei05_c: *mut c_float,
+        sday_c: c_float,
+    );
+
+    pub fn elteik_c(
+        pf107y_c: c_int,
+        invdip_c: c_float,
+        mlt_c: c_float,
+        ddd_c: c_float,
+        pf107_c: c_float,
+        tev_c: *mut c_float,
+        sigtev_c: *mut c_float,
+    );
+
+    pub fn iontif_c(
+        pf107y_c: c_int,
+        invdip_c: c_float,
+        mlt_c: c_float,
+        ddd_c: c_float,
+        pf107_c: c_float,
+        tiv_c: *mut c_float,
+        sigtiv_c: *mut c_float,
+    );
+
+    pub fn gallden_c(
+        l_c: c_float,
+        day_c: c_float,
+        rz12_c: c_float,
+    ) -> c_float;
+
+    pub fn ohzden_c(
+        l_c: c_float,
+        lat_c: c_float,
+    ) -> c_float;
+
+    pub fn fof1ed_c(
+        absmlt_c: c_float,
+        rssn_c: c_float,
+        xhi3_c: c_float,
+    ) -> c_float;
+
+    pub fn f1_c1_c(
+        absmdp_c: c_float,
+        hour_c: c_float,
+        sax2_c: c_float,
+        sux2_c: c_float,
+    ) -> c_float;
+
+    pub fn tal_c(
+        hdeep_c: c_float,
+        depth_c: c_float,
+        width_c: c_float,
+        dlndh_c: c_float,
+        ext_c: *mut bool,
+        e_c: *mut c_float,
+    );
+
+    pub fn rogul_c(
+        day_c: c_float,
+        xhi_c: c_float,
+        seax_c: *mut c_float,
+        grat_c: *mut c_float,
+    );
+
+    pub fn inilay_c(
+        night_c: bool,
+        f1reg_c: bool,
+        nmf2_c: c_float,
+        nmf1_c: c_float,
+        nme_c: c_float,
+        vner_c: c_float,
+        hmf2_c: c_float,
+        hmf1_c: c_float,
+        hme_c: c_float,
+        hv1r_c: c_float,
+        hv2r_c: c_float,
+        hhalf_c: c_float,
+        hxl_c: *mut c_float,
+        scl_c: *mut c_float,
+        amp_c: *mut c_float,
+        iqu_c: *mut c_int,
+    );
+
+    pub fn xen_c(
+        h_c: c_float,
+        hmf2_c: c_float,
+        nmf2_c: c_float,
+        hme_c: c_float,
+        n_c: c_int,
+        hxl_c: *const c_float,
+        scl_c: *const c_float,
+        amp_c: *const c_float,
+    ) -> c_float;
+
+    pub fn teba_c(
+        diplat_c: c_float,
+        hour_c: c_float,
+        season_c: c_int,
+        tea_c: *mut c_float,
+    );
+
+    pub fn tede_c(
+        h_c: c_float,
+        xn_c: c_float,
+        covsat_c: c_float,
+    ) -> c_float;
+
+    pub fn calion_c(
+        invdip_c: c_float,
+        mlt_c: c_float,
+        alt_c: c_float,
+        ddd_c: c_float,
+        pf107_c: c_float,
+        no_c: *mut c_float,
+        nh_c: *mut c_float,
+        nhe_c: *mut c_float,
+        nn_c: *mut c_float,
+    );
+
+    pub fn chemion_c(
+        jprint_c: c_int,
+        alt_c: c_float,
+        f107d_c: c_float,
+        f10781_c: c_float,
+        te_c: c_float,
+        ti_c: c_float,
+        tn_c: c_float,
+        oxn_c: c_float,
+        o2n_c: c_float,
+        n2n_c: c_float,
+        hen_c: c_float,
+        hn_c: c_float,
+        user_no_c: c_float,
+        n4s_c: c_float,
+        edens_c: c_float,
+        user_oplus_c: c_float,
+        szad_c: c_float,
+        ro_c: *mut c_float,
+        ro2_c: *mut c_float,
+        rno_c: *mut c_float,
+        rn2_c: *mut c_float,
+        rn_c: *mut c_float,
+        den_no_c: *mut c_float,
+        den_n2d_c: *mut c_float,
+        inewt_c: *mut c_int,
+    );
+
+    pub fn spreadf_brazil_c(
+        daynr_c: c_int,
+        idayy_c: c_int,
+        f107d_c: c_float,
+        lati_c: c_float,
+        osfbr_c: *mut c_float,
+    );
+
+    pub fn clcmlt_c(
+        iyyyy_c: c_int,
+        ddd_c: c_int,
+        uthr_c: c_float,
+        glat_c: c_float,
+        glon_c: c_float,
+        mlt_c: *mut c_float,
+    );
+
+    pub fn b0_98_c(
+        hour_c: c_float,
+        sax_c: c_float,
+        sux_c: c_float,
+        nseasn_c: c_int,
+        r_c: c_float,
+        zlo_c: c_float,
+        zmodip_c: c_float,
+    ) -> c_float;
 }
 

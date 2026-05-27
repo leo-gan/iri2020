@@ -59,6 +59,8 @@ c-----------------------------------------------------------------------
         dimension       outf(20,1000),oarr(100)
         logical         jf(50),jff(50)
 
+        write(*,*) 'FORT: iy=', iy, ' md=', md, ' hour=', hour
+
 c
 c turning off computations that are not needed for integration
 c

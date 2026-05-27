@@ -48,22 +48,20 @@ pub fn iritec(
             let abeg = hbeg + (j - 1) as f32 * hsect + hastep;
             let aend = abeg + hsect - hstep;
 
-            unsafe {
-                crate::ffi::iri_sub_c(
-                    jff.as_ptr(),
-                    jmag,
-                    alati,
-                    along,
-                    iy,
-                    md,
-                    hour,
-                    abeg,
-                    aend,
-                    hstep,
-                    outf.as_mut_ptr(),
-                    oarr.as_mut_ptr(),
-                );
-            }
+            crate::irisub::iri_sub(
+                &jff,
+                jmag,
+                alati,
+                along,
+                iy,
+                md,
+                hour,
+                abeg,
+                aend,
+                hstep,
+                &mut outf,
+                oarr,
+            );
 
             if j == 1 {
                 hm_f2 = oarr[1];
@@ -91,22 +89,20 @@ pub fn iritec(
     let abeg = hlastbeg + hastep;
     let aend = hlastbeg + ilast as f32 * hstep - hastep;
 
-    unsafe {
-        crate::ffi::iri_sub_c(
-            jf.as_ptr(),
-            jmag,
-            alati,
-            along,
-            iy,
-            md,
-            hour,
-            abeg,
-            aend,
-            hstep,
-            outf.as_mut_ptr(),
-            oarr.as_mut_ptr(),
-        );
-    }
+    crate::irisub::iri_sub(
+        jf,
+        jmag,
+        alati,
+        along,
+        iy,
+        md,
+        hour,
+        abeg,
+        aend,
+        hstep,
+        &mut outf,
+        oarr,
+    );
 
     if iisect < 1 {
         hm_f2 = oarr[1];

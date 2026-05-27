@@ -299,9 +299,9 @@ C--------------------------------------------------------------
         DIMENSION a01(2,2)
 		COMMON /BLO15/hcor2,scahei
 		call tops_cor2(h,xmodip,a01)
-      	  tc2d=a01(1,1)+a01(2,1)*pf107
+      	          tc2d=a01(1,1)+a01(2,1)*pf107
           tc2n=a01(1,2)+a01(2,2)*pf107
-          tc2 = HPOL(HOUR,tc2d,tc2n,SAX300,SUX300,1.,1.)
+          tc2 = HPOL(HOUR,tc2d,tc2n,srh,ssh,1.,1.)
 		  if(h.lt.hcor2) tc2=(exp((h-hmF2)/scahei)-1)*tc2
 		  TCOR2CAL = tc2
        RETURN

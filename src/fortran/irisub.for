@@ -445,7 +445,7 @@ C*****************************************************************
 C*****************************************************************
       INTEGER    DAYNR,DDO,DO2,SEASON,SEADAY
       REAL       LATI,LONGI,MO2,MO,MODIP,NMF2,MAGBR,INVDIP,IAPO,
-     &           NMF1,NME,NMD,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
+     &           NMF1,NME,NMD,DIPL,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
      &           INVDIP_OLD,INVDPC_OLD
       CHARACTER  FILNAM*512
       CHARACTER  PREFIX*256
@@ -982,6 +982,7 @@ c
 			endif
 		if((jf(2).and.(.not.jf(23))).or.(jf(2).and.jf(48))) then
       		call igrf_sub(lati,longi,ryear,600.0,fl,icode,dipl,babs)
+        	write(*,*) 'FORT 600km: fl=', fl, ' icode=', icode, ' dipl=', dipl, ' babs=', babs
         	if(fl.gt.10.) fl=10.
       		invdip_old=INVDPC_OLD(FL,DIMO,BABS,DIPL)
 			endif
@@ -1598,10 +1599,10 @@ c
 		  xneppo=ohzden(xlppo,ppmlat)
 		  xnept=ohzden(xlpt,ppmlat)
         else
-		  xnepp=gallden(xlpp,daynr,rssn)
-		  xnemid=gallden(xlmid,daynr,rssn)
-		  xneppo=gallden(xlppo,daynr,rssn)
-		  xnept=gallden(xlpt,daynr,rssn)
+		  xnepp=gallden(xlpp,int(daynr),rssn)
+		  xnemid=gallden(xlmid,int(daynr),rssn)
+		  xneppo=gallden(xlppo,int(daynr),rssn)
+		  xnept=gallden(xlpt,int(daynr),rssn)
        endif
 c		xnepp1=xnepp/10.0
 c        xneppo=caadenet(xlppo,xmlt)
@@ -2008,8 +2009,10 @@ c without solar activity effects included (Truhlik et al., 2012)
 c isa for solar activity correction: isa=0 sol activity corr off
               isa=0
               if(jf(42)) isa=1
+              write(*,*) 'FORT elteik inputs: isa=', isa, ' invdip_old=', invdip_old, ' xmlt=', xmlt, ' daynr=', daynr, ' pf107obs=', pf107obs
               call elteik(isa,invdip_old,xmlt,daynr,
      &              pf107obs,teva,sdteva)
+              write(*,*) 'FORT elteik outputs: teva=', teva
               do ijk=3,7
                  ate(ijk)=teva(ijk-2)
                  enddo
@@ -2512,6 +2515,7 @@ c output of solar indices used
 c		write(6,10201) iyyyy,rssn,gind,cov,covsat,f107d,f10781,
 c     &	f107365,pf107,cov-f10781,cov-f107365,cov-pf107
 c10201	format(I5,11F6.1)
+      write(*,*) 'FORT end:',invdip_old,invdip
        icalls=icalls+1
 
       RETURN

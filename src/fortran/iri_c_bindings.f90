@@ -618,6 +618,219 @@ contains
         call GEOCGM01(icor_c, iyear_c, hi_c, dat_c, pla_c, plo_c)
     end subroutine geocgm01_c
 
+    real(c_float) function fout_c(modip_c, lati_c, longi_c, hourut_c, ff0_c) bind(C, name="fout_c")
+        real(c_float), intent(in), value :: modip_c, lati_c, longi_c, hourut_c
+        real(c_float), intent(in) :: ff0_c(988)
+        real :: FOUT
+        fout_c = FOUT(modip_c, lati_c, longi_c, hourut_c, ff0_c)
+    end function fout_c
+
+    real(c_float) function xmout_c(modip_c, lati_c, longi_c, hourut_c, xm0_c) bind(C, name="xmout_c")
+        real(c_float), intent(in), value :: modip_c, lati_c, longi_c, hourut_c
+        real(c_float), intent(in) :: xm0_c(441)
+        real :: XMOUT
+        xmout_c = XMOUT(modip_c, lati_c, longi_c, hourut_c, xm0_c)
+    end function xmout_c
+
+    subroutine c_apf(isdate_c, hourut_c, indap_c) bind(C, name="apf_c")
+        integer(c_int), intent(in), value :: isdate_c
+        real(c_float), intent(in), value :: hourut_c
+        integer(c_int), intent(out) :: indap_c(13)
+        call APF(isdate_c, hourut_c, indap_c)
+    end subroutine c_apf
+
+    subroutine c_apfmsis(isdate_c, hourut_c, iapo_c) bind(C, name="apfmsis_c")
+        integer(c_int), intent(in), value :: isdate_c
+        real(c_float), intent(in), value :: hourut_c
+        real(c_float), intent(out) :: iapo_c(7)
+        call APFMSIS(isdate_c, hourut_c, iapo_c)
+    end subroutine c_apfmsis
+
+    subroutine c_apf_only(iyyyy_c, mm_c, id_c, f107d_c, f107pd_c, f10781_c, f107365_c, iapd_c, isdate_c) bind(C, name="apf_only_c")
+        integer(c_int), intent(in), value :: iyyyy_c, mm_c, id_c
+        real(c_float), intent(out) :: f107d_c, f107pd_c, f10781_c, f107365_c
+        integer(c_int), intent(out) :: iapd_c
+        integer(c_int), intent(out) :: isdate_c
+        call APF_ONLY(iyyyy_c, mm_c, id_c, f107d_c, f107pd_c, f10781_c, f107365_c, iapd_c, isdate_c)
+    end subroutine c_apf_only
+
+    subroutine c_storm(indap_c, lati_c, longi_c, icoord_c, cglat_c, kut_c, daynr_c, stormcorr_c) bind(C, name="storm_c")
+        integer(c_int), intent(in) :: indap_c(13)
+        real(c_float), intent(in), value :: lati_c, longi_c
+        integer(c_int), intent(in), value :: icoord_c
+        real(c_float), intent(out) :: cglat_c
+        integer(c_int), intent(in), value :: kut_c, daynr_c
+        real(c_float), intent(out) :: stormcorr_c
+        call STORM(indap_c, lati_c, longi_c, icoord_c, cglat_c, kut_c, daynr_c, stormcorr_c)
+    end subroutine c_storm
+
+    real(c_float) function storme_ap_c(daynr_c, mlat_c, ah3_c) bind(C, name="storme_ap_c")
+        integer(c_int), intent(in), value :: daynr_c
+        real(c_float), intent(in), value :: mlat_c, ah3_c
+        real :: STORME_AP
+        storme_ap_c = STORME_AP(daynr_c, mlat_c, ah3_c)
+    end function storme_ap_c
+
+    subroutine c_auroral_boundary(xkp_c, xmlt_c, cgmlat_c, ab_mlat_c) bind(C, name="auroral_boundary_c")
+        real(c_float), intent(in), value :: xkp_c, xmlt_c
+        real(c_float), intent(out) :: cgmlat_c
+        real(c_float), intent(out) :: ab_mlat_c(48)
+        call auroral_boundary(xkp_c, xmlt_c, cgmlat_c, ab_mlat_c)
+    end subroutine c_auroral_boundary
+
+    subroutine c_shamdhmf2(rlat_c, flon_c, t_c, rz_c, hmf2_c) bind(C, name="shamdhmf2_c")
+        real(c_float), intent(in), value :: rlat_c, flon_c, t_c, rz_c
+        real(c_float), intent(out) :: hmf2_c
+        call SHAMDHMF2(rlat_c, flon_c, t_c, rz_c, hmf2_c)
+    end subroutine c_shamdhmf2
+
+    subroutine c_model_hmf2(iday_c, month_c, ut_c, modip_c, longi_c, f10781_c, hmf2_c) bind(C, name="model_hmf2_c")
+        integer(c_int), intent(in), value :: iday_c, month_c
+        real(c_float), intent(in), value :: ut_c, modip_c, longi_c, f10781_c
+        real(c_float), intent(out) :: hmf2_c
+        call model_hmF2(iday_c, month_c, ut_c, modip_c, longi_c, f10781_c, hmf2_c)
+    end subroutine c_model_hmf2
+
+    real(c_float) function hmf2ed_c(magbr_c, rssn_c, ratf_c, xm3000_c) bind(C, name="hmf2ed_c")
+        real(c_float), intent(in), value :: magbr_c, rssn_c, ratf_c, xm3000_c
+        real :: HMF2ED
+        hmf2ed_c = HMF2ED(magbr_c, rssn_c, ratf_c, xm3000_c)
+    end function hmf2ed_c
+
+    subroutine c_toph05(cov_c, mlat_c, hour_c, hmf2_c, hei05_c, sday_c) bind(C, name="toph05_c")
+        real(c_float), intent(in), value :: cov_c, mlat_c, hour_c, hmf2_c, sday_c
+        real(c_float), intent(inout) :: hei05_c
+        call TOPH05(cov_c, mlat_c, hour_c, hmf2_c, hei05_c, sday_c)
+    end subroutine c_toph05
+
+    subroutine c_elteik(pf107y_c, invdip_c, mlt_c, ddd_c, pf107_c, tev_c, sigtev_c) bind(C, name="elteik_c")
+        integer(c_int), intent(in), value :: pf107y_c
+        real(c_float), intent(in), value :: invdip_c, mlt_c, ddd_c, pf107_c
+        real(c_float), intent(out) :: tev_c(5), sigtev_c(5)
+        call ELTEIK(pf107y_c, invdip_c, mlt_c, int(ddd_c), pf107_c, tev_c, sigtev_c)
+    end subroutine c_elteik
+
+    subroutine c_iontif(pf107y_c, invdip_c, mlt_c, ddd_c, pf107_c, tiv_c, sigtiv_c) bind(C, name="iontif_c")
+        integer(c_int), intent(in), value :: pf107y_c
+        real(c_float), intent(in), value :: invdip_c, mlt_c, ddd_c, pf107_c
+        real(c_float), intent(out) :: tiv_c(4), sigtiv_c(4)
+        call IONTIF(pf107y_c, invdip_c, mlt_c, int(ddd_c), pf107_c, tiv_c, sigtiv_c)
+    end subroutine c_iontif
+
+    real(c_float) function gallden_c(l_c, day_c, rz12_c) bind(C, name="gallden_c")
+        real(c_float), intent(in), value :: l_c, day_c, rz12_c
+        real :: gallden
+        gallden_c = gallden(l_c, int(day_c), rz12_c)
+    end function gallden_c
+
+    real(c_float) function ohzden_c(l_c, lat_c) bind(C, name="ohzden_c")
+        real(c_float), intent(in), value :: l_c, lat_c
+        real :: ohzden
+        ohzden_c = ohzden(l_c, lat_c)
+    end function ohzden_c
+
+    real(c_float) function fof1ed_c(absmlt_c, rssn_c, xhi3_c) bind(C, name="fof1ed_c")
+        real(c_float), intent(in), value :: absmlt_c, rssn_c, xhi3_c
+        real :: FOF1ED
+        fof1ed_c = FOF1ED(absmlt_c, rssn_c, xhi3_c)
+    end function fof1ed_c
+
+    real(c_float) function f1_c1_c(absmdp_c, hour_c, sax2_c, sux2_c) bind(C, name="f1_c1_c")
+        real(c_float), intent(in), value :: absmdp_c, hour_c, sax2_c, sux2_c
+        real :: f1_c1
+        f1_c1_c = f1_c1(absmdp_c, hour_c, sax2_c, sux2_c)
+    end function f1_c1_c
+
+    subroutine c_tal(hdeep_c, depth_c, width_c, dlndh_c, ext_c, e_c) bind(C, name="tal_c")
+        real(c_float), intent(in), value :: hdeep_c, depth_c, width_c, dlndh_c
+        logical(c_bool), intent(out) :: ext_c
+        real(c_float), intent(out) :: e_c(4)
+        logical :: ext
+        call TAL(hdeep_c, depth_c, width_c, dlndh_c, ext, e_c)
+        ext_c = ext
+    end subroutine c_tal
+
+    subroutine c_rogul(day_c, xhi_c, seax_c, grat_c) bind(C, name="rogul_c")
+        real(c_float), intent(in), value :: day_c, xhi_c
+        real(c_float), intent(out) :: seax_c, grat_c
+        call ROGUL(day_c, xhi_c, seax_c, grat_c)
+    end subroutine c_rogul
+
+    subroutine c_inilay(night_c, f1reg_c, nmf2_c, nmf1_c, nme_c, vner_c, hmf2_c, hmf1_c, hme_c, &
+                        hv1r_c, hv2r_c, hhalf_c, hxl_c, scl_c, amp_c, iqu_c) bind(C, name="inilay_c")
+        logical(c_bool), intent(in), value :: night_c, f1reg_c
+        real(c_float), intent(in), value :: nmf2_c, nmf1_c, nme_c, vner_c, hmf2_c, hmf1_c, hme_c
+        real(c_float), intent(in), value :: hv1r_c, hv2r_c, hhalf_c
+        real(c_float), intent(out) :: hxl_c(4), scl_c(4), amp_c(4)
+        integer(c_int), intent(out) :: iqu_c
+        logical :: night, f1reg
+        night = night_c
+        f1reg = f1reg_c
+        call INILAY(night, f1reg, nmf2_c, nmf1_c, nme_c, vner_c, hmf2_c, hmf1_c, hme_c, &
+                    hv1r_c, hv2r_c, hhalf_c, hxl_c, scl_c, amp_c, iqu_c)
+    end subroutine c_inilay
+
+    real(c_float) function xen_c(h_c, hmf2_c, nmf2_c, hme_c, n_c, hxl_c, scl_c, amp_c) bind(C, name="xen_c")
+        real(c_float), intent(in), value :: h_c, hmf2_c, nmf2_c, hme_c
+        integer(c_int), intent(in), value :: n_c
+        real(c_float), intent(in) :: hxl_c(4), scl_c(4), amp_c(4)
+        real :: XEN
+        xen_c = XEN(h_c, hmf2_c, nmf2_c, hme_c, n_c, hxl_c, scl_c, amp_c)
+    end function xen_c
+
+    subroutine c_teba(diplat_c, hour_c, season_c, tea_c) bind(C, name="teba_c")
+        real(c_float), intent(in), value :: diplat_c, hour_c
+        integer(c_int), intent(in), value :: season_c
+        real(c_float), intent(out) :: tea_c(4)
+        call TEBA(diplat_c, hour_c, season_c, tea_c)
+    end subroutine c_teba
+
+    real(c_float) function tede_c(h_c, xn_c, covsat_c) bind(C, name="tede_c")
+        real(c_float), intent(in), value :: h_c, xn_c, covsat_c
+        real :: TEDE
+        tede_c = TEDE(h_c, xn_c, covsat_c)
+    end function tede_c
+
+    subroutine c_calion(invdip_c, mlt_c, alt_c, ddd_c, pf107_c, no_c, nh_c, nhe_c, nn_c) bind(C, name="calion_c")
+        real(c_float), intent(in), value :: invdip_c, mlt_c, alt_c, ddd_c, pf107_c
+        real(c_float), intent(out) :: no_c, nh_c, nhe_c, nn_c
+        call CALION(invdip_c, mlt_c, alt_c, int(ddd_c), pf107_c, no_c, nh_c, nhe_c, nn_c)
+    end subroutine c_calion
+
+    subroutine c_chemion(jprint_c, alt_c, f107d_c, f10781_c, te_c, ti_c, tn_c, &
+                         oxn_c, o2n_c, n2n_c, hen_c, hn_c, user_no_c, n4s_c, edens_c, user_oplus_c, szad_c, &
+                         ro_c, ro2_c, rno_c, rn2_c, rn_c, den_no_c, den_n2d_c, inewt_c) bind(C, name="chemion_c")
+        integer(c_int), intent(in), value :: jprint_c
+        real(c_float), intent(in), value :: alt_c, f107d_c, f10781_c, te_c, ti_c, tn_c
+        real(c_float), intent(in), value :: oxn_c, o2n_c, n2n_c, hen_c, hn_c, user_no_c, n4s_c, edens_c, user_oplus_c, szad_c
+        real(c_float), intent(out) :: ro_c, ro2_c, rno_c, rn2_c, rn_c, den_no_c, den_n2d_c
+        integer(c_int), intent(out) :: inewt_c
+        call CHEMION(jprint_c, alt_c, f107d_c, f10781_c, te_c, ti_c, tn_c, &
+                     oxn_c, o2n_c, n2n_c, hen_c, hn_c, user_no_c, n4s_c, edens_c, user_oplus_c, szad_c, &
+                     ro_c, ro2_c, rno_c, rn2_c, rn_c, den_no_c, den_n2d_c, inewt_c)
+    end subroutine c_chemion
+
+    subroutine c_spreadf_brazil(daynr_c, idayy_c, f107d_c, lati_c, osfbr_c) bind(C, name="spreadf_brazil_c")
+        integer(c_int), intent(in), value :: daynr_c, idayy_c
+        real(c_float), intent(in), value :: f107d_c, lati_c
+        real(c_float), intent(out) :: osfbr_c(25)
+        call spreadf_brazil(daynr_c, idayy_c, f107d_c, lati_c, osfbr_c)
+    end subroutine c_spreadf_brazil
+
+    subroutine c_clcmlt(iyyyy_c, ddd_c, uthr_c, glat_c, glon_c, mlt_c) bind(C, name="clcmlt_c")
+        integer(c_int), intent(in), value :: iyyyy_c, ddd_c
+        real(c_float), intent(in), value :: uthr_c, glat_c, glon_c
+        real(c_float), intent(out) :: mlt_c
+        call CLCMLT(iyyyy_c, ddd_c, uthr_c, glat_c, glon_c, mlt_c)
+    end subroutine c_clcmlt
+
+    real(c_float) function b0_98_c(hour_c, sax_c, sux_c, nseasn_c, r_c, zlo_c, zmodip_c) bind(C, name="b0_98_c")
+        real(c_float), intent(in), value :: hour_c, sax_c, sux_c, r_c, zlo_c, zmodip_c
+        integer(c_int), intent(in), value :: nseasn_c
+        real :: B0_98
+        b0_98_c = B0_98(hour_c, sax_c, sux_c, nseasn_c, r_c, zlo_c, zmodip_c)
+    end function b0_98_c
+
 end module iri_c_bindings
 
 

@@ -56,6 +56,7 @@ pub fn run_iri(
     let dhour_plus_25 = dhour + 25.0;
 
     unsafe {
+        init_igrf_c();
         read_ig_rz_c();
         readapf107_c();
     }
@@ -77,24 +78,22 @@ pub fn run_iri(
     }
 
     let mut outf = vec![0.0_f32; 20 * 1000];
-    let mut oarr = vec![0.0_f32; 100];
+    let mut oarr = [0.0_f32; 100];
 
-    unsafe {
-        iri_sub_c(
-            jf.as_ptr(),
-            jmag,
-            glat,
-            glon,
-            year,
-            mmdd,
-            dhour_plus_25,
-            heibeg,
-            heiend,
-            heistp,
-            outf.as_mut_ptr(),
-            oarr.as_mut_ptr(),
-        );
-    }
+    crate::irisub::iri_sub(
+        &jf,
+        jmag,
+        glat,
+        glon,
+        year,
+        mmdd,
+        dhour_plus_25,
+        heibeg,
+        heiend,
+        heistp,
+        &mut outf,
+        &mut oarr,
+    );
 
     let mut tecbo = 0.0_f32;
     let mut tecto = 0.0_f32;
@@ -110,7 +109,7 @@ pub fn run_iri(
         0.0,
         heiend,
         0.1,
-        (&mut oarr[..]).try_into().unwrap(),
+        &mut oarr,
         &mut tecbo,
         &mut tecto,
     );
@@ -128,7 +127,7 @@ pub fn run_iri(
     Ok(IriResult {
         altkm,
         outf,
-        oarr,
+        oarr: oarr.to_vec(),
     })
 }
 

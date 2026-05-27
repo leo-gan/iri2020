@@ -19,6 +19,7 @@ pub mod iritec;
 pub mod firi_data;
 
 pub mod b0_b1_model;
+pub mod irisub;
 
 
 

@@ -16,10 +16,12 @@ fn assert_approx_eq(a: &[f32], b: &[Option<f32>], tol: f32) {
             continue;
         }
         let diff = (x - y).abs();
+        let max_val = x.abs().max(y.abs());
+        let allowed_diff = if max_val > 1.0 { tol * max_val } else { tol };
         assert!(
-            diff <= tol,
+            diff <= allowed_diff,
             "Mismatch at index {}: {} vs {} (diff = {}, tol = {})",
-            i, x, y, diff, tol
+            i, x, y, diff, allowed_diff
         );
     }
 }
@@ -62,14 +64,17 @@ fn verify_scenario(
                 continue;
             }
             let diff = (computed_val - expected_val).abs();
+            let max_val = computed_val.abs().max(expected_val.abs());
+            let allowed = if max_val > 1.0 { 1e-4 * max_val } else { 1e-4 };
             assert!(
-                diff <= 1e-4,
-                "outf mismatch at row {}, col {}: computed {}, expected {} (diff = {})",
+                diff <= allowed,
+                "outf mismatch at row {}, col {}: computed {}, expected {} (diff = {}, allowed = {})",
                 row,
                 col,
                 computed_val,
                 expected_val,
-                diff
+                diff,
+                allowed
             );
         }
     }

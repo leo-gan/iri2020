@@ -90,7 +90,8 @@ c    dipl      dip latitude in degrees
 c    babs      magnetic field strength in Gauss
 c-----------------------------------------------------------------------
 
-      REAL              LATI,LONGI
+      REAL              LATI,LONGI,xl,dipl,babs
+      INTEGER           icode
       COMMON /CONST/UMR,PI
 
       lati=xlat

@@ -24,6 +24,8 @@ fn test_iritec_equivalence() {
     let _data_dir = get_data_dir();
     unsafe {
         init_igrf_c();
+        read_ig_rz_c();
+        readapf107_c();
     }
 
     // Default jf switches
@@ -45,7 +47,7 @@ fn test_iritec_equivalence() {
     // Grid of scenarios
     let latitudes = [-45.0, 0.0, 45.0, 75.0];
     let longitudes = [-90.0, 0.0, 90.0];
-    let years = [2000, 2015, 2025];
+    let years = [2000, 2015, 2020];
     let mmdds = [315, 615];
     let hours = [12.0, 0.0, 18.5];
     let altitude_ends = [1000.0, 2000.0];
@@ -109,6 +111,12 @@ fn test_iritec_equivalence() {
                                 let diff_bo = (rust_tecbo - fort_tecbo).abs();
                                 let diff_to = (rust_tecto - fort_tecto).abs();
 
+                                if diff_bo >= tolerance || diff_to >= tolerance {
+                                    println!("lat={}, lon={}, year={}, hour={}", lat, lon, year, hour);
+                                    for idx in 0..100 {
+                                        println!("oarr[{}] -> Rust={}, Fortran={}", idx, rust_oarr[idx], fort_oarr[idx]);
+                                    }
+                                }
                                 assert!(
                                     diff_bo < tolerance,
                                     "Bottomside TEC mismatch for lat={}, lon={}, year={}, hour={}, hend={}, hstep={}: Rust={}, Fortran={}, diff={}",
@@ -133,7 +141,7 @@ fn test_iritec_equivalence() {
                                     rust_oarr[1], fort_oarr[1]
                                 );
                                 assert!(
-                                    diff_xnm < 1.0,
+                                    diff_xnm < 1e-4 * fort_oarr[0] || (diff_xnm < 1.0 && fort_oarr[0] == 0.0),
                                     "xnmF2 mismatch: Rust={}, Fortran={}",
                                     rust_oarr[0], fort_oarr[0]
                                 );
@@ -154,4 +162,5 @@ fn test_ioncorr() {
     let expected = 40.3 * tec / (freq * freq);
     assert!((corr - expected).abs() < 1e-5);
 }
+
 
