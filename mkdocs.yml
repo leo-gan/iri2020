@@ -1,17 +1,59 @@
-site_name: IRI2020 Rust Port
+site_name: IRI2020 ionosphere model ported from Fortran to Rust
+site_description: IRI2020 ionosphere model ported from Fortran to Rust
+site_author: Leonid
+site_url: https://leo-gan.github.io/iri2020/
+repo_name: leo-gan/iri2020
+repo_url: https://github.com/leo-gan/iri2020
+
 theme:
   name: material
   palette:
-    scheme: slate
+    # Scheme mode: Light
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    # Scheme mode: Dark
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.instant
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    logo: material/shield-lock
 
 nav:
   - Home: index.md
-  - Package & Math Model (Rust Part): package.md
+  - Rust Package: package.md
+  - Porting: porting.md
   - Algorithmic Reference: algorithms.md
-  - Porting Documentation: porting.md
 
 plugins:
   - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/leo-gan/iri2020
+      name: GitHub Repository
 
 markdown_extensions:
   - pymdownx.arithmatex:
