@@ -6,3 +6,6 @@ __pycache__/
 *.so
 *.a
 src/fortran/build
+.idea/
+.venv/
+.
