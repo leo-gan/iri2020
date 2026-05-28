@@ -1,15 +1,9 @@
 from __future__ import annotations
-import subprocess
-import logging
 from dateutil.parser import parse
 from datetime import datetime
 import xarray
-import io
-import os
-import numpy as np
-import importlib.resources as impr
 
-from .build import build
+from .iri2020 import run_iri_py  # type: ignore
 
 SIMOUT = ["ne", "Tn", "Ti", "Te", "nO+", "nH+", "nHe+", "nO2+", "nNO+", "nCI", "nN+"]
 
@@ -24,66 +18,36 @@ def IRI(time: str | datetime, altkmrange: list[float], glat: float, glon: float)
     assert isinstance(glat, (int, float)) and isinstance(
         glon, (int, float)
     ), "glat, glon is scalar"
-    # %% build IRI executable if needed
-    iri_name = "iri2020_driver"
-    if os.name == "nt":
-        iri_name += ".exe"
 
-    # %% run IRI
-    with (
-        impr.as_file(impr.files(__package__).joinpath(iri_name)) as exe,
-        impr.as_file(impr.files(__package__).joinpath("data")) as data_path,
-    ):
+    dhour = time.hour + time.minute / 60.0 + time.second / 3600.0
 
-        if not exe.is_file():
-            build()
+    ret = run_iri_py(
+        time.year,
+        time.month,
+        time.day,
+        dhour,
+        float(glat),
+        float(glon),
+        [float(a) for a in altkmrange],
+    )
 
-        cmd = [
-            str(exe),
-            str(time.year),
-            str(time.month),
-            str(time.day),
-            str(time.hour),
-            str(time.minute),
-            str(time.second),
-            str(glat),
-            str(glon),
-            str(altkmrange[0]),
-            str(altkmrange[1]),
-            str(altkmrange[2]),
-        ]
+    altkm = ret["altkm"]
+    outf = ret["outf"]
+    oarr = ret["oarr"]
 
-        logging.info(" ".join(cmd))
-        ret = subprocess.check_output(cmd, text=True, cwd=data_path)
+    dsf = {k: (("alt_km"), v) for (k, v) in zip(SIMOUT, outf[:11, :])}
 
-    logging.debug(ret)
-    if not ret:
-        raise RuntimeError("IRI failed to run correctly--gave empty text output")
-    # %% get altitude profile data
-    Nalt = int((altkmrange[1] - altkmrange[0]) // altkmrange[2]) + 1
-
-    arr = np.genfromtxt(io.StringIO(ret), max_rows=Nalt)
-    arr = np.atleast_2d(arr)
-
-    assert arr.ndim == 2 and arr.shape[1] == 12, f"bad text data output format, shape {arr.shape}"
-
-    dsf = {k: (("alt_km"), v) for (k, v) in zip(SIMOUT, arr[:, 1:].T)}
-    altkm = arr[:, 0]
-    # %% get parameter data
-    arr = np.genfromtxt(io.StringIO(ret), skip_header=Nalt)
-    assert arr.ndim == 1 and arr.size == 100, "bad text data output format"
-    # %% assemble output
     iono = xarray.Dataset(
         dsf,
         coords={"time": [time], "alt_km": altkm, "glat": glat, "glon": glon},
-        attrs={"f107": arr[40], "ap": arr[51]},
+        attrs={"f107": oarr[40], "ap": oarr[51]},
     )
 
     for i, p in enumerate(["NmF2", "hmF2", "NmF1", "hmF1", "NmE", "hmE"]):
-        iono[p] = (("time"), [arr[i]])
+        iono[p] = (("time"), [oarr[i]])
 
-    iono["TEC"] = (("time"), [arr[36]])
-    iono["EqVertIonDrift"] = (("time"), [arr[43]])
-    iono["foF2"] = (("time"), [arr[99]])
+    iono["TEC"] = (("time"), [oarr[36]])
+    iono["EqVertIonDrift"] = (("time"), [oarr[43]])
+    iono["foF2"] = (("time"), [oarr[99]])
 
     return iono

@@ -445,9 +445,11 @@ C*****************************************************************
 C*****************************************************************
       INTEGER    DAYNR,DDO,DO2,SEASON,SEADAY
       REAL       LATI,LONGI,MO2,MO,MODIP,NMF2,MAGBR,INVDIP,IAPO,
-     &           NMF1,NME,NMD,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
+     &           NMF1,NME,NMD,DIPL,MM,MLAT,MLONG,NMF2S,NMES,INVDPC,
      &           INVDIP_OLD,INVDPC_OLD
-      CHARACTER  FILNAM*12
+      CHARACTER  FILNAM*512
+      CHARACTER  PREFIX*256
+      CHARACTER  MONTH_STR*2
 c-web-for webversion
 c      CHARACTER FILNAM*53
 
@@ -980,6 +982,7 @@ c
 			endif
 		if((jf(2).and.(.not.jf(23))).or.(jf(2).and.jf(48))) then
       		call igrf_sub(lati,longi,ryear,600.0,fl,icode,dipl,babs)
+        	write(*,*) 'FORT 600km: fl=', fl, ' icode=', icode, ' dipl=', dipl, ' babs=', babs
         	if(fl.gt.10.) fl=10.
       		invdip_old=INVDPC_OLD(FL,DIMO,BABS,DIPL)
 			endif
@@ -1254,11 +1257,10 @@ C
       endif
 
 7797    URSIFO=URSIF2
-        WRITE(FILNAM,104) MONTH+10
-104         FORMAT('ccir',I2,'.asc')
-c-web-for webversion
-c104     FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ccir',I2,'.asc')
-        OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') month+10
+        filnam = trim(prefix) // 'ccir' // month_str // '.asc'
+        OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &          FORM='FORMATTED')
         READ(IUCCIR,4689) F2,FM3
 4689    FORMAT(1X,4E15.8)
@@ -1267,11 +1269,10 @@ C
 C then URSI if chosen ....................................
 C
         if(URSIF2) then
-          WRITE(FILNAM,1144) MONTH+10
-1144          FORMAT('ursi',I2,'.asc')
-c-web-for webversion
-c1144    FORMAT('/var/www/omniweb/cgi/vitmo/IRI/ursi',I2,'.asc')
-          OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+          call get_data_prefix(prefix)
+          write(month_str, '(I2)') month+10
+          filnam = trim(prefix) // 'ursi' // month_str // '.asc'
+          OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &         FORM='FORMATTED')
           READ(IUCCIR,4689) F2
           CLOSE(IUCCIR)
@@ -1288,8 +1289,10 @@ c
 c first CCIR ..............................................
 c
 
-        WRITE(FILNAM,104) NMONTH+10
-        OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') nmonth+10
+        filnam = trim(prefix) // 'ccir' // month_str // '.asc'
+        OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &          FORM='FORMATTED')
         READ(IUCCIR,4689) F2N,FM3N
         CLOSE(IUCCIR)
@@ -1298,8 +1301,10 @@ C
 C then URSI if chosen .....................................
 C
         if(URSIF2) then
-          WRITE(FILNAM,1144) NMONTH+10
-          OPEN(IUCCIR,FILE=FILNAM,STATUS='OLD',ERR=8448,
+          call get_data_prefix(prefix)
+          write(month_str, '(I2)') nmonth+10
+          filnam = trim(prefix) // 'ursi' // month_str // '.asc'
+          OPEN(IUCCIR,FILE=trim(FILNAM),STATUS='OLD',ERR=8448,
      &         FORM='FORMATTED')
           READ(IUCCIR,4689) F2N
           CLOSE(IUCCIR)
@@ -1594,10 +1599,10 @@ c
 		  xneppo=ohzden(xlppo,ppmlat)
 		  xnept=ohzden(xlpt,ppmlat)
         else
-		  xnepp=gallden(xlpp,daynr,rssn)
-		  xnemid=gallden(xlmid,daynr,rssn)
-		  xneppo=gallden(xlppo,daynr,rssn)
-		  xnept=gallden(xlpt,daynr,rssn)
+		  xnepp=gallden(xlpp,int(daynr),rssn)
+		  xnemid=gallden(xlmid,int(daynr),rssn)
+		  xneppo=gallden(xlppo,int(daynr),rssn)
+		  xnept=gallden(xlpt,int(daynr),rssn)
        endif
 c		xnepp1=xnepp/10.0
 c        xneppo=caadenet(xlppo,xmlt)
@@ -2004,8 +2009,10 @@ c without solar activity effects included (Truhlik et al., 2012)
 c isa for solar activity correction: isa=0 sol activity corr off
               isa=0
               if(jf(42)) isa=1
+              write(*,*) 'FORT elteik inputs: isa=', isa, ' invdip_old=', invdip_old, ' xmlt=', xmlt, ' daynr=', daynr, ' pf107obs=', pf107obs
               call elteik(isa,invdip_old,xmlt,daynr,
      &              pf107obs,teva,sdteva)
+              write(*,*) 'FORT elteik outputs: teva=', teva
               do ijk=3,7
                  ate(ijk)=teva(ijk-2)
                  enddo
@@ -2508,6 +2515,7 @@ c output of solar indices used
 c		write(6,10201) iyyyy,rssn,gind,cov,covsat,f107d,f10781,
 c     &	f107365,pf107,cov-f10781,cov-f107365,cov-pf107
 c10201	format(I5,11F6.1)
+      write(*,*) 'FORT end:',invdip_old,invdip
        icalls=icalls+1
 
       RETURN
@@ -2622,3 +2630,22 @@ c                call iri_tec (50.,h_tec_max,2,tec,tect,tecb)
 
         return
         end
+
+      subroutine get_data_prefix(prefix)
+      character*(*) prefix
+      character*256 env_data_dir
+      integer l
+      call getenv('IRI2020_DATA_DIR', env_data_dir)
+      if (env_data_dir .eq. ' ') then
+          prefix = 'src/data/'
+      else
+          l = len_trim(env_data_dir)
+          if (env_data_dir(l:l) .eq. '/') then
+              prefix = env_data_dir(1:l)
+          else
+              prefix = env_data_dir(1:l) // '/'
+          endif
+      endif
+      return
+      end
+

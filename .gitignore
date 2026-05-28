@@ -1,3 +1,8 @@
 *.egg-info/
 build/
 iri2020_driver
+src/rust/target/
+__pycache__/
+*.so
+*.a
+src/fortran/build

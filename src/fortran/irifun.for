@@ -299,9 +299,9 @@ C--------------------------------------------------------------
         DIMENSION a01(2,2)
 		COMMON /BLO15/hcor2,scahei
 		call tops_cor2(h,xmodip,a01)
-      	  tc2d=a01(1,1)+a01(2,1)*pf107
+      	          tc2d=a01(1,1)+a01(2,1)*pf107
           tc2n=a01(1,2)+a01(2,2)*pf107
-          tc2 = HPOL(HOUR,tc2d,tc2n,SAX300,SUX300,1.,1.)
+          tc2 = HPOL(HOUR,tc2d,tc2n,srh,ssh,1.,1.)
 		  if(h.lt.hcor2) tc2=(exp((h-hmF2)/scahei)-1)*tc2
 		  TCOR2CAL = tc2
        RETURN
@@ -7599,7 +7599,8 @@ c     .. array arguments ..
 	double precision coeff_month(0:148,0:47)
 c     .. local scalars ..
 	integer coeff_month_read(1:12)
-	character(256) filedata
+	character(256) filedata, prefix
+	character(2) month_str
 	integer i, j
 c     .. local arrays ..
 	double precision coeff_month_all(0:148,0:47,1:12)
@@ -7607,8 +7608,10 @@ c     .. local arrays ..
 	data coeff_month_read /12*0/
 c
       if (coeff_month_read(month) .eq. 0) then
-        write(filedata, 10) month+10
-        open(15, File=filedata, status='old')
+        call get_data_prefix(prefix)
+        write(month_str, '(I2)') month+10
+        filedata = trim(prefix) // 'mcsat' // month_str // '.dat'
+        open(15, File=trim(filedata), STATUS='old')
 	  do j=0,47
 	    read(15,20) (coeff_month_all(i,j,month),i=0,148)
         end do
@@ -7630,7 +7633,7 @@ c		print*,coeff_month_read(4),coeff_month(0,0),
 c     &        coeff_month(148,1)
 	  return
 
- 10   format('mcsat',i2,'.dat')
+ 10   format('src/data/mcsat',i2,'.dat')
 c-web- special for web version
 c10     FORMAT('/var/www/omniweb/cgi/vitmo/IRI/mcsat',I2,'.dat')
  20   format(6(d12.5))
@@ -10558,15 +10561,19 @@ c----------------------------------------------------------------
 
            integer	iyst,iyend,iymst,iupd,iupm,iupy,imst,imend
            real		aig(806),arz(806)
+           character(256) filedata, prefix
 
            common /igrz/aig,arz,iymst,iymend
 
-           open(unit=12,file='ig_rz.dat',FORM='FORMATTED',status='old')
+                      call get_data_prefix(prefix)
+                      filedata = trim(prefix) // 'ig_rz.dat'
+                      open(12,file=trim(filedata),STATUS='old')
+
 
 c-web- special for web version
 c            open(unit=12,file=
 c     *         '/var/www/omniweb/cgi/vitmo/IRI/ig_rz.dat',
-c     *         FORM='FORMATTED',status='old')
+c     *         FORM='FORMATTED',STATUS='old')
 
 c Read the update date, the start date and the end date (mm,yyyy), and
 c get number of data points to read.
@@ -10741,9 +10748,13 @@ C-------------------------------------------------------------------------
 C
         INTEGER		aap(27000,9),iiap(8)
         DIMENSION 	af107(27000,3)
+        character(256)  filedata, prefix
         COMMON		/apfa/aap,af107,n
 
-        Open(13,FILE='apf107.dat',FORM='FORMATTED',STATUS='OLD')
+                call get_data_prefix(prefix)
+                filedata = trim(prefix) // 'apf107.dat'
+                Open(13,file=trim(filedata),STATUS='OLD')
+
 c-web-sepcial vfor web version
 c      OPEN(13,FILE='/var/www/omniweb/cgi/vitmo/IRI/apf107.dat',
 c     *    FORM='FORMATTED',STATUS='OLD')

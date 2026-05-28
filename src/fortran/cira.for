@@ -1451,6 +1451,7 @@ C       Calculate spline coefficients
 C       temperature at altitude
       TZ=1./Y
       DENSU=TZ
+
    10 IF(XM.EQ.0.) GO TO 50
 C
 C      CALCULATE DENSITY ABOVE ZA
