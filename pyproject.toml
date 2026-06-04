@@ -22,6 +22,9 @@ lint = [
     "ruff",
     "types-python-dateutil",
 ]
+docs = [
+    "mkdocs-material",
+]
 
 [tool.ruff]
 line-length = 88

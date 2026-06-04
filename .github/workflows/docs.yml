@@ -1,0 +1,33 @@
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          github-token: ${{ github.token }}
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Deploy Docs
+        run: |
+          uv run --with mkdocs-material mkdocs gh-deploy --force
