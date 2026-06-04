@@ -1,0 +1,4 @@
+.md-nav__link,
+.md-tabs__link {
+  text-transform: none !important;
+}

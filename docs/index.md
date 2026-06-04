@@ -12,4 +12,4 @@ This package is built with **Maturin** (PyO3). It compiles the pure Rust `iri202
 pip install .
 ```
 
-To run the implementation, refer to the [Porting Documentation](porting.md) and [Package Documentation](package.md).
+To run the implementation, refer to the [Porting Documentation](porting.md) and [Package Documentation](rust.md).
