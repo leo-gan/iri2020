@@ -13,7 +13,9 @@ def main(time: str, alt_km: list[float], glat: float, glon: float):
 def cli():
     p = ArgumentParser(description="IRI altitude profile")
     p.add_argument("time", help="time of simulation")
-    p.add_argument("latlon", help="geodetic latitude, longitude (degrees)", type=float, nargs=2)
+    p.add_argument(
+        "latlon", help="geodetic latitude, longitude (degrees)", type=float, nargs=2
+    )
     p.add_argument(
         "-alt_km",
         help="altitude START STOP STEP (km)",

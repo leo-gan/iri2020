@@ -18,30 +18,37 @@ concurrency:
 jobs:
 
   core:
+    runs-on: ubuntu-latest
     timeout-minutes: 5
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python: ['3.9', '3.12']
 
     env:
       FC: gfortran-14
 
-    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v5
       with:
-        python-version: ${{ matrix.python }}
+        enable-cache: true
+        github-token: ${{ github.token }}
 
-    - run: pip install .[tests,lint]
-      timeout-minutes: 2
+    - name: Set up Python 3.12
+      run: uv python install 3.12
 
-    - run: flake8
-    - run: mypy
+    - name: Install dependencies
+      run: uv pip install .[tests,lint]
 
-    - run: pytest
+    - name: Lint with Ruff
+      run: |
+        uv run ruff check src
+        uv run ruff format --check src
+
+    - name: Type check with mypy
+      run: uv run mypy src
+
+    - name: Run tests
+      run: uv run pytest
 
   windows:
       needs: core
@@ -60,15 +67,21 @@ jobs:
       - name: Put MSYS2_MinGW64 on PATH
         run: echo "${{ steps.msys2.outputs.msys2-location }}/ucrt64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - uses: actions/setup-python@v5
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          enable-cache: true
+          github-token: ${{ github.token }}
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
 
       - uses: actions/checkout@v4
 
-      - run: python -m pip install .[tests,lint]
+      - run: uv pip install .[tests,lint]
 
-      - run: flake8
-      - run: mypy
+      - run: uv run ruff check src
 
-      - run: pytest -v
+      - run: uv run mypy src
+
+      - run: uv run pytest -v

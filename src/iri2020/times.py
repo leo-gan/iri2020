@@ -9,13 +9,17 @@ from .vprofile import timeprofile
 
 def main(time: list[str], alt_km: list[float], glat: float, glon: float):
     """IRI time profile"""
-    return timeprofile((time[0], time[1]), timedelta(hours=float(time[2])), alt_km, glat, glon)
+    return timeprofile(
+        (time[0], time[1]), timedelta(hours=float(time[2])), alt_km, glat, glon
+    )
 
 
 def cli():
     p = ArgumentParser()
     p.add_argument("time", help="start yy-mm-dd, stop yy-mm-dd, step_hour", nargs=3)
-    p.add_argument("latlon", help="geodetic latitude, longitude (degrees)", nargs=2, type=float)
+    p.add_argument(
+        "latlon", help="geodetic latitude, longitude (degrees)", nargs=2, type=float
+    )
     p.add_argument(
         "-alt_km",
         help="altitude START STOP STEP (km)",

@@ -22,7 +22,7 @@ and then install latest release:
 ```bash
 git clone https://github.com/leo-gan/iri2020
 cd iri2020
-pip install .
+uv pip install .
 ```
 
 ## Data files
@@ -52,5 +52,5 @@ Detailed documentation is available in the `docs/` directory:
 The Rust port is built with `Maturin` (`PyO3`) and can be installed with:
 
 ```bash
-pip install .
+uv pip install .
 ```

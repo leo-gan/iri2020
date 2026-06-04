@@ -24,7 +24,9 @@ def datetimerange(start: datetime, end: datetime, step: timedelta) -> list[datet
     return [start + i * step for i in range((end - start) // step)]
 
 
-def timeprofile(tlim: tuple, dt: timedelta, altkmrange: list[float], glat, glon) -> xarray.Dataset:
+def timeprofile(
+    tlim: tuple, dt: timedelta, altkmrange: list[float], glat, glon
+) -> xarray.Dataset:
     """compute IRI altitude profile over time range for fixed lat/lon"""
 
     times = datetimerange(tlim[0], tlim[1], dt)
