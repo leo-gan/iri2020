@@ -5,7 +5,9 @@ from pathlib import Path
 from argparse import ArgumentParser
 
 
-def main(time: str, alt_km: float, glat: list[float], glon: float, outfn: Path | None = None):
+def main(
+    time: str, alt_km: float, glat: list[float], glon: float, outfn: Path | None = None
+):
     """latitude Profile Example"""
 
     iono = geoprofile(latrange=glat, glon=glon, altkm=alt_km, time=time)

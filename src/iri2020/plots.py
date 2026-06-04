@@ -77,7 +77,8 @@ def altprofile(iono: xarray.Dataset):
     axs = fig.subplots(1, 2)
 
     fig.suptitle(
-        f"{str(iono.time[0].values)[:-13]}\n" f"Glat, Glon: {iono.glat.item()}, {iono.glon.item()}"
+        f"{str(iono.time[0].values)[:-13]}\n"
+        f"Glat, Glon: {iono.glat.item()}, {iono.glon.item()}"
     )
 
     pn = axs[0]
@@ -108,7 +109,9 @@ def latprofile(iono: xarray.Dataset):
     ax.plot(iono["glat"], iono["NmF2"], label="N$_m$F$_2$")
     ax.plot(iono["glat"], iono["NmF1"], label="N$_m$F$_1$")
     ax.plot(iono["glat"], iono["NmE"], label="N$_m$E")
-    ax.set_title(str(iono.time[0].values)[:-13] + f'  latitude {iono["glat"][[0, -1]].values}')
+    ax.set_title(
+        str(iono.time[0].values)[:-13] + f"  latitude {iono['glat'][[0, -1]].values}"
+    )
     # ax.set_xlim(iono.lat[[0, -1]])
     ax.set_xlabel(r"Geog. Lat. ($^\circ$)")
     ax.set_ylabel("(m$^{-3}$)")
@@ -119,7 +122,9 @@ def latprofile(iono: xarray.Dataset):
     ax.plot(iono["glat"], iono["hmF1"], label="h$_m$F$_1$")
     ax.plot(iono["glat"], iono["hmE"], label="h$_m$E")
     ax.set_xlim(iono["glat"][[0, -1]])
-    ax.set_title(str(iono.time[0].values)[:-13] + f'  latitude  {iono["glat"][[0, -1]].values}')
+    ax.set_title(
+        str(iono.time[0].values)[:-13] + f"  latitude  {iono['glat'][[0, -1]].values}"
+    )
     ax.set_xlabel(r"Geog. Lat. ($^\circ$)")
     ax.set_ylabel("(km)")
 

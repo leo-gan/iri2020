@@ -39,6 +39,6 @@ def test_input_validation_num_alt():
 
 def test_output_shape():
     from iri2020.iri2020 import run_iri_py
+
     res = run_iri_py(2015, 12, 13, 10.0, 65.1, -147.5, [100.0, 200.0, 10.0])
     assert res["outf"].shape == (20, 11)
-

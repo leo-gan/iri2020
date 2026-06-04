@@ -6,12 +6,29 @@ build-backend = "maturin"
 name = "iri2020"
 version = "0.1.0"
 description = "IRI2020 ionosphere model from Python and Rust"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 dependencies = [
     "xarray",
     "numpy",
     "python-dateutil",
 ]
+
+[project.optional-dependencies]
+tests = [
+    "pytest",
+]
+lint = [
+    "mypy",
+    "ruff",
+    "types-python-dateutil",
+]
+docs = [
+    "mkdocs-material",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
@@ -19,3 +36,7 @@ python-source = "src"
 module-name = "iri2020.iri2020"
 manifest-path = "src/rust/Cargo.toml"
 exclude = []
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = ["union-attr", "index"]

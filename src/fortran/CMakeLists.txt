@@ -11,7 +11,6 @@ add_library(iri STATIC
     igrf.for
     cira.for
     rocdrift.for
-    iri_c_bindings.f90
 )
 
 # Position independent code is required when linking static libraries into shared Rust libs (.so)
