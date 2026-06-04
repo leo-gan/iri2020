@@ -42,9 +42,11 @@ theme:
 
 nav:
   - Home: index.md
-  - Rust Package: package.md
+  - IRI2020: IRI2020.md
+  - Rust package: rust.md
+  - Fortran package: fortran.md
   - Porting: porting.md
-  - Algorithmic Reference: algorithms.md
+  - Algorithms: algorithms.md
 
 plugins:
   - search
@@ -63,6 +65,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - javascripts/mathjax.js
