@@ -45,6 +45,7 @@ nav:
   - Rust Package: package.md
   - Porting: porting.md
   - Algorithmic Reference: algorithms.md
+  - Scientific Review: IRI2020.md
 
 plugins:
   - search
