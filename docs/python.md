@@ -128,3 +128,68 @@ The returned `xarray.Dataset` contains the following variables:
 
 - `f107`: Solar radio flux index ($F_{10.7}$) proxy value.
 - `ap`: Geomagnetic planetary index ($A_p$) value.
+
+---
+
+## Visualization Examples
+
+The package includes utility plotting functions under `iri2020.plots` to visualize the computed ionospheric results.
+
+### Altitude Profile
+
+Shows electron density ($N_e$) and temperatures ($T_i$, $T_e$) versus altitude:
+
+```python
+import iri2020
+import iri2020.plots as plots
+from matplotlib.pyplot import show
+
+# Compute and plot altitude profile
+res = iri2020.IRI("2020-06-21", [100.0, 500.0, 10.0], 45.0, -75.0)
+plots.altprofile(res)
+show()
+```
+
+![Altitude Profile](figures/iri_altitude.png)
+
+### Time Profile
+
+Plots F2/F1/E layer densities, heights, foF2 frequency, and vertical Total Electron Content (TEC) over time:
+
+```python
+from datetime import timedelta
+import iri2020
+import iri2020.plots as plots
+from matplotlib.pyplot import show
+
+# Compute and plot time profile
+res = iri2020.timeprofile(
+    tlim=("2020-06-21", "2020-06-22"),
+    dt=timedelta(hours=1),
+    altkmrange=[100.0, 500.0, 10.0],
+    glat=45.0,
+    glon=-75.0
+)
+plots.timeprofile(res)
+show()
+```
+
+![Time Profile Plasma](figures/iri_time_plasma.png)
+![Time Profile TEC](figures/iri_time_tec.png)
+
+### Latitude Profile
+
+Plots densities and heights over a range of geographic latitudes:
+
+```python
+import iri2020
+import iri2020.plots as plots
+from matplotlib.pyplot import show
+
+# Compute and plot latitude profile
+res = iri2020.geoprofile(latrange=(-60.0, 60.0, 2.0), glon=-75.0, altkm=300.0, time="2020-06-21")
+plots.latprofile(res)
+show()
+```
+
+![Latitude Profile](figures/iri_latitude.png)
