@@ -51,7 +51,7 @@ Equatorial vertical ion drift velocities in the F-region are calculated in `rocd
 - **Method**: Evaluates drifts based on local time, longitude, and solar activity ($F_{10.7}$ index) using multidimensional bilinear interpolations.
 - **Reference**: [Fejer et al., 2008 (Journal of Geophysical Research)](https://doi.org/10.1029/2008JA013177)
 
-## F2-Layer Bottomside Thickness ($B_0$, $B_1$)
+## F2-Layer Bottomside Thickness
 
 The thickness parameter $B_0$ (which scales the profile width below the F2 peak) and the shape parameter $B_1$ (which controls the profile slope) are computed in `b0_b1_model.rs`.
 

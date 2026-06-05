@@ -51,7 +51,7 @@ gfortran -o iri_driver iri_driver.f90 irisub.for irifun.for iritec.for iridreg.f
 ./iri_driver 1980 03 21 12 00 00 0.0 0.0 100.0 500.0 20.0
 ```
 
-### (Arguments are: year, month, day, hour, minute, second, latitude, longitude, min_alt_km, max_alt_km, step_alt_km)
+**Arguments are:** year, month, day, hour, minute, second, latitude, longitude, min_alt_km, max_alt_km, step_alt_km
 
 ## Running Tests
 
