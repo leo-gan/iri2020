@@ -7,8 +7,9 @@ This part of the documentation covers the legacy Fortran infrastructure, compila
 The Fortran codebase is located in:
 
 - `src/fortran/`: Contains the original Fortran 77/90 source files, a CMake build configuration, and command-line driver/test scripts.
+- `src/data/`: Centralized `.dat` and `.asc` files required to operate the models.
 
-Key source files include:
+- Key source files include:
 
 - `irisub.for`: Core subroutine (`IRI_SUB`) that orchestrates all sub-model calculations.
 - `irifun.for`: Auxiliary mathematical functions, interpolation routines, and profile calculation helpers.

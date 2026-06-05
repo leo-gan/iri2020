@@ -7,6 +7,7 @@ This part of the documentation covers the Rust infrastructure, model execution, 
 The Rust codebase is located in:
 
 - `src/rust/`
+- `src/data/`: Centralized `.dat` and `.asc` files required to operate the models.
 
 ## Running Tests
 
