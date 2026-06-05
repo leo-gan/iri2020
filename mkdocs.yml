@@ -43,6 +43,7 @@ theme:
 nav:
   - Home: index.md
   - IRI2020: IRI2020.md
+  - Python package: python.md
   - Rust package: rust.md
   - Fortran package: fortran.md
   - Porting: porting.md
