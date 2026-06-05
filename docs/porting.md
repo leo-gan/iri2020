@@ -1,4 +1,4 @@
-# Fortran to Rust Porting Documentation
+# Fortran to Rust Porting
 
 This document outlines the software engineering process used to eliminate legacy Fortran build and compiler dependencies and deliver a pure Rust implementation of the International Reference Ionosphere 2020 (IRI2020) model.
 
@@ -7,6 +7,7 @@ This document outlines the software engineering process used to eliminate legacy
 ## 1. Porting Strategy and Phased Milestones
 
 ### Phase 1: Incremental FFI and Equivalence Testing
+
 To guarantee absolute numerical precision throughout the porting process, the initial architecture utilized a hybrid approach:
 
 - Exposing Fortran routines via an FFI bridge layer (`iri_c_bindings.f90`).
@@ -14,6 +15,7 @@ To guarantee absolute numerical precision throughout the porting process, the in
 - Constructing side-by-side integration tests (e.g., `igrf_tests.rs`, `cira_tests.rs`) to verify every translated Rust routine against the active Fortran reference.
 
 ### Phase 2: Core Algorithm Translations
+
 Individual modules were translated to safe Rust and tested incrementally:
 
 - **IGRF**: Refactored in `igrf.rs` to eliminate global mutable common blocks, encapsulating state inside a thread-safe `IgrfModel` struct.
@@ -22,6 +24,7 @@ Individual modules were translated to safe Rust and tested incrementally:
 - **Coordinate Tracing & Integration**: Translated the coordinate converter `iriflip.rs` and Total Electron Content integrator `iritec.rs`.
 
 ### Phase 3: Pure Rust Transition
+
 After verifying all auxiliary subroutines, we completed the final translation:
 
 - **FFI Removal**: Deleted all FFI wrappers, bindings, and the `build.rs` compile configuration.
@@ -41,6 +44,7 @@ During translation, several hidden bugs and inconsistencies in the original Fort
 ## 3. Build & Test Architecture
 
 ### Verification Flow
+
 ```mermaid
 graph TD
     A[Pure Rust Core: src/rust] -->|Maturin Build| B[Python Extension: PyO3]

@@ -5,6 +5,7 @@ The International Reference Ionosphere (IRI) is the internationally recognized s
 ---
 
 ## 1. Core Simulation Engine
+
 The main execution flow is controlled by the `irisub.rs` module, translating the legacy `IRI_SUB` control routine.
 
 - **Physical Quantities**: Computes electron density ($N_e$), electron temperature ($T_e$), ion temperature ($T_i$), neutral temperature ($T_n$), and relative percentage abundances of positive ions ($O^+$, $H^+$, $He^+$, $O_2^+$, $NO^+$).
@@ -12,6 +13,7 @@ The main execution flow is controlled by the `irisub.rs` module, translating the
 - **Reference**: [Bilitza et al., 2022 (Journal of Space Weather and Space Climate)](https://doi.org/10.1051/swsc/2022009)
 
 ## 2. Total Electron Content (TEC) Integration
+
 The module `iritec.rs` computes the integrated electron column density along a vertical path from a lower altitude boundary ($h_{start}$) to an upper altitude boundary ($h_{end}$):
 
 $$\text{vTEC} = \int_{h_{start}}^{h_{end}} N_e(h) \, dh$$
@@ -21,6 +23,7 @@ $$\text{vTEC} = \int_{h_{start}}^{h_{end}} N_e(h) \, dh$$
 - **Reference**: [Bilitza, 2001 (Radio Science)](https://doi.org/10.1029/2000RS002432)
 
 ## 3. Geomagnetic Field Model (IGRF-13)
+
 The module `igrf.rs` and static data in `igrf_coeff.rs` implement the 13th generation of the **International Geomagnetic Reference Field (IGRF)**.
 
 - **Mathematical Form**: Evaluates the main geomagnetic field potential ($V$) as a spherical harmonic expansion of degree $N=13$:
@@ -33,6 +36,7 @@ $$V(r, \theta, \phi) = a \sum_{n=1}^{N} \sum_{m=0}^{n} \left(\frac{a}{r}\right)^
 - **Reference**: [Alken et al., 2021 (Earth, Planets and Space)](https://doi.org/10.1186/s40623-020-01288-x)
 
 ## 4. Neutral Atmosphere Model (CIRA-86 / NRLMSISE-00)
+
 The module `cira.rs` and coefficients in `cira_coeff.rs` implement the COSPAR International Reference Atmosphere model.
 
 - **Scientific Foundation**: NRLMSISE-00 models the neutral temperature profile and the number densities of major/minor thermospheric species ($He$, $O$, $N_2$, $O_2$, $Ar$, $H$, $N$, and anomalous $O$).
@@ -40,6 +44,7 @@ The module `cira.rs` and coefficients in `cira_coeff.rs` implement the COSPAR In
 - **Reference**: [Picone et al., 2002 (Journal of Geophysical Research)](https://doi.org/10.1029/2002JA009430)
 
 ## 5. ROCSAT-1 Vertical Plasma Drift
+
 Equatorial vertical ion drift velocities in the F-region are calculated in `rocdrift.rs` using the 64,900 coefficient empirical tensor stored in `rocdrift_coeff.rs`.
 
 - **Physical Model**: Represents empirical F-region vertical drifts measured by the ROCSAT-1 satellite.
@@ -47,12 +52,14 @@ Equatorial vertical ion drift velocities in the F-region are calculated in `rocd
 - **Reference**: [Fejer et al., 2008 (Journal of Geophysical Research)](https://doi.org/10.1029/2008JA013177)
 
 ## 6. F2-Layer Bottomside Thickness ($B_0$, $B_1$)
+
 The thickness parameter $B_0$ (which scales the profile width below the F2 peak) and the shape parameter $B_1$ (which controls the profile slope) are computed in `b0_b1_model.rs`.
 
-- **Scientific Approach**: Offers the Altadill spherical harmonics model option (derived from global ionosonde records) alongside traditional Bilitz/Gulyaeva table options.
+- **Scientific Approach**: Offers the Altadill spherical harmonics model option (derived from global ionosonde records) alongside traditional Bilitza/Gulyaeva table options.
 - **Reference**: [Altadill et al., 2009 (Journal of Atmospheric and Solar-Terrestrial Physics)](https://doi.org/10.1016/j.jastp.2008.09.043)
 
 ## 7. Electron Density Profile Construction
+
 The vertical electron density profile $N_e(h)$ is synthesized in `xe_profile.rs` by dividing the ionosphere into structural layers:
 
 - **Profile Layers**: Bottomside D-region, E-region, E-F valley, F1-region, and F2-region.
@@ -65,6 +72,7 @@ $$\text{LAY}(h; h_i, W_i) = \ln\left(1 + e^{\frac{h-h_i}{W_i}}\right) - \ln\left
 - **Reference**: [Rawer, 1988 (Advances in Space Research)](https://doi.org/10.1016/0273-1177(88)90234-5)
 
 ## 8. D-Region Electron Density Models
+
 Implements lower ionosphere models (altitudes 60 to 90 km) in `d_region.rs` and `iridreg.rs`.
 
 - **FIRI Model**: The Faraday International Reference Ionosphere (stored as a massive 160,380 float lookup block in `firi_data.rs`) represents Friedrich and Torkar's empirical lower-ionosphere profiles, evaluated via 5D interpolation.
@@ -72,12 +80,14 @@ Implements lower ionosphere models (altitudes 60 to 90 km) in `d_region.rs` and 
 - **References**: [Friedrich & Torkar, 2001 (Journal of Geophysical Research)](https://doi.org/10.1029/2001JA900070); [Danilov et al., 1995 (Advances in Space Research)](https://doi.org/10.1016/0273-1177(94)00071-G)
 
 ## 9. Ion Composition Model
+
 The positive ion density profiles ($O^+$, $H^+$, $He^+$, $O_2^+$, $NO^+$) are computed in `ioncom.rs` with coefficients defined in `calion_coeff.rs`.
 
 - **Physical Formulation**: Solves the altitude transitions where atomic oxygen ions dominate the F2 region, transitioning to molecular species ($O_2^+$, $NO^+$) in the E region, and light ions ($H^+$, $He^+$) in the topside plasmasphere.
 - **Reference**: [Bilitza, 1990 (Advances in Space Research)](https://doi.org/10.1016/0273-1177(90)90184-R)
 
 ## 10. Coordinate Systems & Field-Line Tracing (GEO-CGM)
+
 The module `iriflip.rs` implements geomagnetic coordinate transformations and magnetic field line tracing using spatial arrays in `cormag_data.rs`.
 
 - **Coordinate Conversions**: Converts between Geocentric coordinates and Corrected Geomagnetic (CGM) coordinates.
