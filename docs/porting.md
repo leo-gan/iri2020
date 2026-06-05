@@ -4,7 +4,7 @@ This document outlines the software engineering process used to eliminate legacy
 
 ---
 
-## 1. Porting Strategy and Phased Milestones
+## Porting Strategy and Phased Milestones
 
 ### Phase 1: Incremental FFI and Equivalence Testing
 
@@ -31,7 +31,7 @@ After verifying all auxiliary subroutines, we completed the final translation:
 - **Refactoring Main Execution Loop**: Replaced remaining FFI targets in `irisub.rs` with Rust stubs and utility methods, removing the `use crate::ffi::*;` dependency block.
 - **Cleanup**: Purged the FFI-dependent test suites, leaving only pure Rust unit and integration tests.
 
-## 2. Key Bug Fixes and Numerical Corrections
+## Key Bug Fixes and Numerical Corrections
 
 During translation, several hidden bugs and inconsistencies in the original Fortran codebase were identified and resolved:
 
@@ -41,7 +41,7 @@ During translation, several hidden bugs and inconsistencies in the original Fort
 | **ROCSAT-1 Drift Model** (`rocdrift.rs`) | Geographic longitude variable `xgglon` was evaluated without ever being initialized, causing drift computations to run on stack garbage. | Geographic longitude is explicitly assigned and parsed into the interpolation routines. |
 | **Ap MSIS Solar Index** (`data_io.rs`) | Unsigned integer subtraction of `usize` indices triggered panic underflows when calculating hours and dates. | Arguments cast to signed integer formats ($i32$) prior to index computations to prevent underflows. |
 
-## 3. Build & Test Architecture
+## Build & Test Architecture
 
 ### Verification Flow
 
