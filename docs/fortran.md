@@ -1,4 +1,4 @@
-# Package, Math, and Model (Fortran Part)
+# Fortran package
 
 This part of the documentation covers the legacy Fortran infrastructure, compilation, driver execution, and how the original reference model is run.
 
