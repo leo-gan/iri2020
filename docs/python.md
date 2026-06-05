@@ -2,6 +2,12 @@
 
 This part of the documentation covers the Python interface to the IRI2020 model. The Python package wraps the high-performance pure Rust implementation using PyO3 and exposes it as clean, user-friendly Python APIs returning `xarray.Dataset` objects.
 
+## Architecture
+
+The Python codebase is located in:
+
+- `src/iri2020/`
+
 ## Installation
 
 You can install the package directly using standard Python package managers:

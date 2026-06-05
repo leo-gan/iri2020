@@ -1,15 +1,13 @@
-# Package, Math, and Model (Rust Part)
+# Rust package
 
 This part of the documentation covers the Rust infrastructure, model execution, and how to run tests.
 
 ## Architecture
 
-The project consists of four main directories:
+The Rust codebase is located in:
 
-- `src/rust/`: A Rust crate utilizing PyO3 to wrap the IRI2020 mathematical models written in pure Rust and expose them to Python.
-- `src/data/`: Centralized `.dat` and `.asc` files required to operate the thermosphere/ionosphere mathematical models. The Rust core loads the required files directly from here.
-- `src/iri2020/`: The Python module and tests wrapper.
-- `src/fortran/`: The original Fortran module.
+- `src/rust/`
+- `src/data/`: Centralized `.dat` and `.asc` files required to operate the models.
 
 ## Running Tests
 
