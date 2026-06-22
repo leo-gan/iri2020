@@ -13,3 +13,6 @@ site/
 .venv-test/
 .mypy_cache/
 .pytest_cache/
+
+# Neural surrogate training outputs (regenerate via run_pipeline)
+surrogate_artifacts/

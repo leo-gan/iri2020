@@ -47,6 +47,7 @@ nav:
   - Rust package: rust.md
   - Fortran package: fortran.md
   - Porting: porting.md
+  - Surrogates: surrogate.md
   - Algorithms: algorithms.md
 
 plugins:
