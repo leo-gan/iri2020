@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 import json
 
 import numpy as np
@@ -294,18 +295,16 @@ def generate_samples(
             for item, res in zip(batch_reqs, results):
                 if res.get("ok"):
                     meta = item["meta"]
+                    assert isinstance(meta, dict)
                     y_row = np.asarray(res["y"], dtype=np.float64)
                     if not np.isfinite(y_row).all():
                         failed += 1
                         continue
-                    rows.append(
-                        {
-                            **meta,
-                            "f107": float(res["f107"]),
-                            "ap": float(res["ap"]),
-                            "y": y_row,
-                        }
-                    )
+                    row: dict[str, Any] = {**meta}
+                    row["f107"] = float(res["f107"])
+                    row["ap"] = float(res["ap"])
+                    row["y"] = y_row
+                    rows.append(row)
                     if len(rows) >= n:
                         break
                 else:
@@ -362,6 +361,12 @@ def generate_samples(
 def concat_batches(*batches: IRISampleBatch) -> IRISampleBatch:
     assert batches
     targets = batches[0].targets
+    for b in batches[1:]:
+        if b.targets != targets:
+            raise ValueError(
+                f"cannot concatenate batches with different targets: "
+                f"{targets!r} vs {b.targets!r}"
+            )
     return IRISampleBatch(
         doy=np.concatenate([b.doy for b in batches]),
         hour=np.concatenate([b.hour for b in batches]),

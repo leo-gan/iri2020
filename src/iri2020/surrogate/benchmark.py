@@ -15,6 +15,7 @@ import json
 
 import numpy as np
 import torch
+import torch.nn as nn
 
 from iri2020.base import IRI
 
@@ -41,17 +42,26 @@ class Predictor:
     supports_batch: bool = True
 
 
+def _hour_to_hms(hour_float: float) -> tuple[int, int, int]:
+    """Convert fractional hour-of-day to (hour, minute, second) via integer minutes."""
+    total_minutes = int(round(float(hour_float) * 60)) % (24 * 60)
+    h = total_minutes // 60
+    m = total_minutes % 60
+    return h, m, 0
+
+
 def _predict_iri_rust_batch(batch: IRISampleBatch, targets: list[str]) -> np.ndarray:
     """Re-run IRI (Rust via Python) at stored coordinates — ground truth / reference speed."""
     y = np.full((len(batch.doy), len(targets)), np.nan, dtype=np.float64)
     for i in range(len(batch.doy)):
+        h, mi, s = _hour_to_hms(float(batch.hour[i]))
         t = datetime(
             int(batch.year[i]),
             int(batch.month[i]),
             int(batch.day[i]),
-            int(batch.hour[i]) % 24,
-            int((batch.hour[i] % 1) * 60),
-            0,
+            h,
+            mi,
+            s,
         )
         a = float(batch.alt_km[i])
         try:
@@ -80,8 +90,8 @@ def load_models(
     config: SurrogateConfig,
     pre: IRIPreprocessor,
     device: str = "cpu",
-):
-    models = {}
+) -> dict[str, Any]:
+    models: dict[str, Any] = {}
     res_path = artifact_dir / "residual_mlp.pt"
     if res_path.exists():
         m = ResidualFourierMLP(
@@ -97,7 +107,7 @@ def load_models(
 
     film_path = artifact_dir / "film_mlp.pt"
     if film_path.exists():
-        m = FiLMConditionedMLP(
+        m_film = FiLMConditionedMLP(
             pre.input_dim(),
             pre.cond_dim(),
             pre.output_dim(),
@@ -105,14 +115,16 @@ def load_models(
             config.film_blocks,
             config.film_dropout,
         )
-        m.load_state_dict(torch.load(film_path, map_location=device, weights_only=True))
-        m.eval()
-        models["film_mlp"] = m
+        m_film.load_state_dict(
+            torch.load(film_path, map_location=device, weights_only=True)
+        )
+        m_film.eval()
+        models["film_mlp"] = m_film
 
     ens_path = artifact_dir / "film_ensemble.pt"
     if ens_path.exists():
 
-        def factory():
+        def factory() -> nn.Module:
             return FiLMConditionedMLP(
                 pre.input_dim(),
                 pre.cond_dim(),
@@ -137,7 +149,7 @@ def load_models(
 
 
 def nn_predict_physical(
-    model,
+    model: nn.Module,
     pre: IRIPreprocessor,
     batch: IRISampleBatch,
     use_cond: bool,
@@ -149,11 +161,11 @@ def nn_predict_physical(
     model.eval()
     with torch.no_grad():
         if isinstance(model, DeepEnsemble):
-            y_norm, _ = model.predict_with_uncertainty(xt, ct if use_cond else None)
-            y_norm = y_norm.cpu().numpy()
+            y_t, _ = model.predict_with_uncertainty(xt, ct if use_cond else None)
+            y_arr = y_t.cpu().numpy()
         else:
-            y_norm = model(xt, ct if use_cond else None).cpu().numpy()
-    return pre.inverse_y(y_norm)
+            y_arr = model(xt, ct if use_cond else None).cpu().numpy()
+    return pre.inverse_y(y_arr)
 
 
 def run_benchmark(
@@ -249,37 +261,34 @@ def run_benchmark(
         predictors.append(("xgboost", _xgb))
 
     if "residual_mlp" in models:
-        m = models["residual_mlp"].to(device)
-        predictors.append(
-            (
-                "residual_mlp",
-                lambda m=m: nn_predict_physical(
-                    m, pre, eval_batch, use_cond=False, device=device
-                ),
+        res_m: nn.Module = models["residual_mlp"].to(device)
+
+        def _res_pred(m: nn.Module = res_m) -> np.ndarray:
+            return nn_predict_physical(
+                m, pre, eval_batch, use_cond=False, device=device
             )
-        )
+
+        predictors.append(("residual_mlp", _res_pred))
 
     if "film_mlp" in models:
-        m = models["film_mlp"].to(device)
-        predictors.append(
-            (
-                "film_mlp",
-                lambda m=m: nn_predict_physical(
-                    m, pre, eval_batch, use_cond=True, device=device
-                ),
+        film_m: nn.Module = models["film_mlp"].to(device)
+
+        def _film_pred(m: nn.Module = film_m) -> np.ndarray:
+            return nn_predict_physical(
+                m, pre, eval_batch, use_cond=True, device=device
             )
-        )
+
+        predictors.append(("film_mlp", _film_pred))
 
     if "film_ensemble" in models:
-        m = models["film_ensemble"].to(device)
-        predictors.append(
-            (
-                "film_ensemble",
-                lambda m=m: nn_predict_physical(
-                    m, pre, eval_batch, use_cond=True, device=device
-                ),
+        ens_m: nn.Module = models["film_ensemble"].to(device)
+
+        def _ens_pred(m: nn.Module = ens_m) -> np.ndarray:
+            return nn_predict_physical(
+                m, pre, eval_batch, use_cond=True, device=device
             )
-        )
+
+        predictors.append(("film_ensemble", _ens_pred))
 
     # Self-consistency of stored labels vs live Rust (sanity, small subsample)
     n_check = min(16, len(eval_batch.doy))

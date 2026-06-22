@@ -85,6 +85,12 @@ def load_ensemble_into(
     ensemble: DeepEnsemble, path: Path | str, map_location: str = "cpu"
 ) -> DeepEnsemble:
     payload = torch.load(path, map_location=map_location, weights_only=True)
-    for m, sd in zip(ensemble.members, payload["state_dicts"]):
+    state_dicts = payload["state_dicts"]
+    if len(state_dicts) != ensemble.n_members:
+        raise ValueError(
+            f"ensemble size mismatch: checkpoint has {len(state_dicts)} members, "
+            f"but ensemble was built with {ensemble.n_members}"
+        )
+    for m, sd in zip(ensemble.members, state_dicts, strict=True):
         m.load_state_dict(sd)
     return ensemble
