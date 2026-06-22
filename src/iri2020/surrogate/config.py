@@ -67,7 +67,16 @@ SCALAR_TARGETS: tuple[str, ...] = (
 ALL_TARGETS: tuple[str, ...] = PROFILE_TARGETS + SCALAR_TARGETS
 
 # Default subset for fast training / benchmarking (still multi-scale).
-DEFAULT_TARGETS: tuple[str, ...] = ("ne", "Tn", "Ti", "Te", "NmF2", "hmF2", "TEC", "foF2")
+DEFAULT_TARGETS: tuple[str, ...] = (
+    "ne",
+    "Tn",
+    "Ti",
+    "Te",
+    "NmF2",
+    "hmF2",
+    "TEC",
+    "foF2",
+)
 
 # Periodic input dimensions (radians after encoding).
 PERIODIC_INPUTS: dict[str, float] = {
@@ -92,7 +101,9 @@ class SurrogateConfig:
     seed: int = 42
 
     # Preprocessing
-    fourier_features: int = 16  # Gaussian Fourier feature count (per spatial/time group)
+    fourier_features: int = (
+        16  # Gaussian Fourier feature count (per spatial/time group)
+    )
     fourier_scale: float = 1.0
     log_floor: float = 1e-3  # floor for log targets (avoids -inf)
 
@@ -104,7 +115,9 @@ class SurrogateConfig:
     # FiLM MLP
     film_hidden: int = 128
     film_blocks: int = 3
-    film_cond_dim: int = 4  # f107, ap, sin(doy), cos(doy) style cond vector size after prep
+    film_cond_dim: int = (
+        4  # f107, ap, sin(doy), cos(doy) style cond vector size after prep
+    )
     film_dropout: float = 0.05
 
     # Training (intentionally short by default for smoke / convergence checks)

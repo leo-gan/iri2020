@@ -21,7 +21,12 @@ from iri2020.base import IRI
 from .config import SurrogateConfig
 from .data import IRISampleBatch, generate_samples, load_batch
 from .preprocessing import IRIPreprocessor
-from .metrics import regime_split_metrics, timed_call, per_target_metrics, aggregate_metrics
+from .metrics import (
+    regime_split_metrics,
+    timed_call,
+    per_target_metrics,
+    aggregate_metrics,
+)
 from .models.residual_mlp import ResidualFourierMLP
 from .models.film_mlp import FiLMConditionedMLP
 from .models.ensemble import DeepEnsemble, load_ensemble_into, build_ensemble
@@ -40,8 +45,14 @@ def _predict_iri_rust_batch(batch: IRISampleBatch, targets: list[str]) -> np.nda
     """Re-run IRI (Rust via Python) at stored coordinates — ground truth / reference speed."""
     y = np.full((len(batch.doy), len(targets)), np.nan, dtype=np.float64)
     for i in range(len(batch.doy)):
-        t = datetime(int(batch.year[i]), int(batch.month[i]), int(batch.day[i]),
-                     int(batch.hour[i]) % 24, int((batch.hour[i] % 1) * 60), 0)
+        t = datetime(
+            int(batch.year[i]),
+            int(batch.month[i]),
+            int(batch.day[i]),
+            int(batch.hour[i]) % 24,
+            int((batch.hour[i] % 1) * 60),
+            0,
+        )
         a = float(batch.alt_km[i])
         try:
             ds = IRI(t, [a, a, 1.0], float(batch.glat[i]), float(batch.glon[i]))
@@ -64,28 +75,53 @@ def try_fortran_available() -> bool:
     return False
 
 
-def load_models(artifact_dir: Path, config: SurrogateConfig, pre: IRIPreprocessor, device: str = "cpu"):
+def load_models(
+    artifact_dir: Path,
+    config: SurrogateConfig,
+    pre: IRIPreprocessor,
+    device: str = "cpu",
+):
     models = {}
     res_path = artifact_dir / "residual_mlp.pt"
     if res_path.exists():
-        m = ResidualFourierMLP(pre.input_dim(), pre.output_dim(), config.res_hidden, config.res_blocks, config.res_dropout)
+        m = ResidualFourierMLP(
+            pre.input_dim(),
+            pre.output_dim(),
+            config.res_hidden,
+            config.res_blocks,
+            config.res_dropout,
+        )
         m.load_state_dict(torch.load(res_path, map_location=device, weights_only=True))
         m.eval()
         models["residual_mlp"] = m
 
     film_path = artifact_dir / "film_mlp.pt"
     if film_path.exists():
-        m = FiLMConditionedMLP(pre.input_dim(), pre.cond_dim(), pre.output_dim(),
-                               config.film_hidden, config.film_blocks, config.film_dropout)
+        m = FiLMConditionedMLP(
+            pre.input_dim(),
+            pre.cond_dim(),
+            pre.output_dim(),
+            config.film_hidden,
+            config.film_blocks,
+            config.film_dropout,
+        )
         m.load_state_dict(torch.load(film_path, map_location=device, weights_only=True))
         m.eval()
         models["film_mlp"] = m
 
     ens_path = artifact_dir / "film_ensemble.pt"
     if ens_path.exists():
+
         def factory():
-            return FiLMConditionedMLP(pre.input_dim(), pre.cond_dim(), pre.output_dim(),
-                                      config.film_hidden, config.film_blocks, config.film_dropout)
+            return FiLMConditionedMLP(
+                pre.input_dim(),
+                pre.cond_dim(),
+                pre.output_dim(),
+                config.film_hidden,
+                config.film_blocks,
+                config.film_dropout,
+            )
+
         ens = build_ensemble(factory, config.ensemble_size)
         load_ensemble_into(ens, ens_path, map_location=device)
         ens.eval()
@@ -100,7 +136,13 @@ def load_models(artifact_dir: Path, config: SurrogateConfig, pre: IRIPreprocesso
     return models
 
 
-def nn_predict_physical(model, pre: IRIPreprocessor, batch: IRISampleBatch, use_cond: bool, device: str = "cpu") -> np.ndarray:
+def nn_predict_physical(
+    model,
+    pre: IRIPreprocessor,
+    batch: IRISampleBatch,
+    use_cond: bool,
+    device: str = "cpu",
+) -> np.ndarray:
     X, C, _ = batch_to_tensors(batch, pre)
     xt = torch.from_numpy(X).to(device)
     ct = torch.from_numpy(C).to(device)
@@ -139,7 +181,9 @@ def run_benchmark(
             test_batch = load_batch(test_path)
         else:
             print("generating small test batch ...", flush=True)
-            test_batch = generate_samples(min(200, config.n_test), config, extreme=False)
+            test_batch = generate_samples(
+                min(200, config.n_test), config, extreme=False
+            )
 
     if extreme_batch is None:
         ext_path = artifact_dir / "extreme_batch.npz"
@@ -147,7 +191,9 @@ def run_benchmark(
             extreme_batch = load_batch(ext_path)
         else:
             print("generating small extreme batch ...", flush=True)
-            extreme_batch = generate_samples(min(100, config.n_extreme), config, extreme=True)
+            extreme_batch = generate_samples(
+                min(100, config.n_extreme), config, extreme=True
+            )
 
     eval_batch = IRISampleBatch(
         doy=np.concatenate([test_batch.doy, extreme_batch.doy]),
@@ -162,10 +208,12 @@ def run_benchmark(
         ap=np.concatenate([test_batch.ap, extreme_batch.ap]),
         y=np.concatenate([test_batch.y, extreme_batch.y], axis=0),
         targets=test_batch.targets,
-        regime=np.concatenate([
-            np.zeros(len(test_batch.doy), dtype=np.int8),
-            np.ones(len(extreme_batch.doy), dtype=np.int8),
-        ]),
+        regime=np.concatenate(
+            [
+                np.zeros(len(test_batch.doy), dtype=np.int8),
+                np.ones(len(extreme_batch.doy), dtype=np.int8),
+            ]
+        ),
     )
 
     targets = eval_batch.targets
@@ -202,24 +250,53 @@ def run_benchmark(
 
     if "residual_mlp" in models:
         m = models["residual_mlp"].to(device)
-        predictors.append(("residual_mlp", lambda m=m: nn_predict_physical(m, pre, eval_batch, use_cond=False, device=device)))
+        predictors.append(
+            (
+                "residual_mlp",
+                lambda m=m: nn_predict_physical(
+                    m, pre, eval_batch, use_cond=False, device=device
+                ),
+            )
+        )
 
     if "film_mlp" in models:
         m = models["film_mlp"].to(device)
-        predictors.append(("film_mlp", lambda m=m: nn_predict_physical(m, pre, eval_batch, use_cond=True, device=device)))
+        predictors.append(
+            (
+                "film_mlp",
+                lambda m=m: nn_predict_physical(
+                    m, pre, eval_batch, use_cond=True, device=device
+                ),
+            )
+        )
 
     if "film_ensemble" in models:
         m = models["film_ensemble"].to(device)
-        predictors.append(("film_ensemble", lambda m=m: nn_predict_physical(m, pre, eval_batch, use_cond=True, device=device)))
+        predictors.append(
+            (
+                "film_ensemble",
+                lambda m=m: nn_predict_physical(
+                    m, pre, eval_batch, use_cond=True, device=device
+                ),
+            )
+        )
 
     # Self-consistency of stored labels vs live Rust (sanity, small subsample)
     n_check = min(16, len(eval_batch.doy))
     sub = IRISampleBatch(
-        doy=eval_batch.doy[:n_check], hour=eval_batch.hour[:n_check],
-        year=eval_batch.year[:n_check], month=eval_batch.month[:n_check], day=eval_batch.day[:n_check],
-        glat=eval_batch.glat[:n_check], glon=eval_batch.glon[:n_check], alt_km=eval_batch.alt_km[:n_check],
-        f107=eval_batch.f107[:n_check], ap=eval_batch.ap[:n_check],
-        y=eval_batch.y[:n_check], targets=targets, regime=eval_batch.regime[:n_check],
+        doy=eval_batch.doy[:n_check],
+        hour=eval_batch.hour[:n_check],
+        year=eval_batch.year[:n_check],
+        month=eval_batch.month[:n_check],
+        day=eval_batch.day[:n_check],
+        glat=eval_batch.glat[:n_check],
+        glon=eval_batch.glon[:n_check],
+        alt_km=eval_batch.alt_km[:n_check],
+        f107=eval_batch.f107[:n_check],
+        ap=eval_batch.ap[:n_check],
+        y=eval_batch.y[:n_check],
+        targets=targets,
+        regime=eval_batch.regime[:n_check],
     )
     live = _predict_iri_rust_batch(sub, targets)
     live_err = per_target_metrics(sub.y, live, targets)
@@ -247,11 +324,19 @@ def run_benchmark(
     # --- Speed ---
     speed_n = min(n_speed_samples, len(eval_batch.doy))
     speed_batch = IRISampleBatch(
-        doy=eval_batch.doy[:speed_n], hour=eval_batch.hour[:speed_n],
-        year=eval_batch.year[:speed_n], month=eval_batch.month[:speed_n], day=eval_batch.day[:speed_n],
-        glat=eval_batch.glat[:speed_n], glon=eval_batch.glon[:speed_n], alt_km=eval_batch.alt_km[:speed_n],
-        f107=eval_batch.f107[:speed_n], ap=eval_batch.ap[:speed_n],
-        y=eval_batch.y[:speed_n], targets=targets, regime=eval_batch.regime[:speed_n],
+        doy=eval_batch.doy[:speed_n],
+        hour=eval_batch.hour[:speed_n],
+        year=eval_batch.year[:speed_n],
+        month=eval_batch.month[:speed_n],
+        day=eval_batch.day[:speed_n],
+        glat=eval_batch.glat[:speed_n],
+        glon=eval_batch.glon[:speed_n],
+        alt_km=eval_batch.alt_km[:speed_n],
+        f107=eval_batch.f107[:speed_n],
+        ap=eval_batch.ap[:speed_n],
+        y=eval_batch.y[:speed_n],
+        targets=targets,
+        regime=eval_batch.regime[:speed_n],
     )
 
     def bench_speed(label: str, fn: Callable[[], Any]):
@@ -263,7 +348,10 @@ def run_benchmark(
             "samples_per_sec": sps,
             "ms_per_sample": 1000.0 * secs / speed_n,
         }
-        print(f"  speed {label}: {sps:.1f} samples/s ({1000*secs/speed_n:.2f} ms/sample)", flush=True)
+        print(
+            f"  speed {label}: {sps:.1f} samples/s ({1000 * secs / speed_n:.2f} ms/sample)",
+            flush=True,
+        )
 
     bench_speed("iri_rust", lambda: _predict_iri_rust_batch(speed_batch, targets))
 
@@ -274,15 +362,23 @@ def run_benchmark(
 
     if "residual_mlp" in models:
         m = models["residual_mlp"].to(device)
-        bench_speed("residual_mlp", lambda: nn_predict_physical(m, pre, speed_batch, False, device))
+        bench_speed(
+            "residual_mlp",
+            lambda: nn_predict_physical(m, pre, speed_batch, False, device),
+        )
 
     if "film_mlp" in models:
         m = models["film_mlp"].to(device)
-        bench_speed("film_mlp", lambda: nn_predict_physical(m, pre, speed_batch, True, device))
+        bench_speed(
+            "film_mlp", lambda: nn_predict_physical(m, pre, speed_batch, True, device)
+        )
 
     if "film_ensemble" in models:
         m = models["film_ensemble"].to(device)
-        bench_speed("film_ensemble", lambda: nn_predict_physical(m, pre, speed_batch, True, device))
+        bench_speed(
+            "film_ensemble",
+            lambda: nn_predict_physical(m, pre, speed_batch, True, device),
+        )
 
     report["speed"]["fortran"] = {
         "available": False,

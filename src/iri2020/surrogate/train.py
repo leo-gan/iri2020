@@ -70,7 +70,9 @@ def train_one_model(
     use_cond: bool,
 ) -> dict[str, Any]:
     model = model.to(device)
-    opt = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
+    opt = torch.optim.AdamW(
+        model.parameters(), lr=config.lr, weight_decay=config.weight_decay
+    )
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, config.epochs))
 
     history: dict[str, list[float]] = {"train_loss": [], "val_loss": []}
@@ -105,11 +107,16 @@ def train_one_model(
         va_m = float(np.mean(va_losses)) if va_losses else float("nan")
         history["train_loss"].append(tr_m)
         history["val_loss"].append(va_m)
-        print(f"    epoch {epoch+1}/{config.epochs}  train={tr_m:.5f}  val={va_m:.5f}", flush=True)
+        print(
+            f"    epoch {epoch + 1}/{config.epochs}  train={tr_m:.5f}  val={va_m:.5f}",
+            flush=True,
+        )
 
         if va_m < best_val:
             best_val = va_m
-            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_state = {
+                k: v.detach().cpu().clone() for k, v in model.state_dict().items()
+            }
             patience_left = config.patience
         else:
             patience_left -= 1
@@ -125,8 +132,15 @@ def train_one_model(
 def fit_preprocessor(train: IRISampleBatch, config: SurrogateConfig) -> IRIPreprocessor:
     pre = IRIPreprocessor(config)
     pre.fit(
-        train.doy, train.hour, train.glat, train.glon, train.alt_km,
-        train.f107, train.ap, train.y, targets=train.targets,
+        train.doy,
+        train.hour,
+        train.glat,
+        train.glon,
+        train.alt_km,
+        train.f107,
+        train.ap,
+        train.y,
+        targets=train.targets,
     )
     return pre
 
@@ -203,20 +217,29 @@ def train_ensemble(
     def factory():
         if kind == "film":
             return FiLMConditionedMLP(
-                in_dim=pre.input_dim(), cond_dim=pre.cond_dim(), out_dim=pre.output_dim(),
-                hidden=config.film_hidden, n_blocks=config.film_blocks, dropout=config.film_dropout,
+                in_dim=pre.input_dim(),
+                cond_dim=pre.cond_dim(),
+                out_dim=pre.output_dim(),
+                hidden=config.film_hidden,
+                n_blocks=config.film_blocks,
+                dropout=config.film_dropout,
             )
         return ResidualFourierMLP(
-            in_dim=pre.input_dim(), out_dim=pre.output_dim(),
-            hidden=config.res_hidden, n_blocks=config.res_blocks, dropout=config.res_dropout,
+            in_dim=pre.input_dim(),
+            out_dim=pre.output_dim(),
+            hidden=config.res_hidden,
+            n_blocks=config.res_blocks,
+            dropout=config.res_dropout,
         )
 
     ensemble = build_ensemble(factory, config.ensemble_size)
     histories = []
     print(f"  training {kind} ensemble (M={config.ensemble_size}) ...", flush=True)
     for i, member in enumerate(ensemble.members):
-        print(f"  -- member {i+1}/{config.ensemble_size}", flush=True)
-        info = train_one_model(member, tr_loader, va_loader, config, device, use_cond=use_cond)
+        print(f"  -- member {i + 1}/{config.ensemble_size}", flush=True)
+        info = train_one_model(
+            member, tr_loader, va_loader, config, device, use_cond=use_cond
+        )
         histories.append(info)
     return ensemble, {"members": histories}
 
@@ -277,9 +300,19 @@ def run_full_training_pipeline(
 
         def _take(b, sl):
             return _B(
-                doy=b.doy[sl], hour=b.hour[sl], year=b.year[sl], month=b.month[sl], day=b.day[sl],
-                glat=b.glat[sl], glon=b.glon[sl], alt_km=b.alt_km[sl], f107=b.f107[sl], ap=b.ap[sl],
-                y=b.y[sl], targets=b.targets, regime=b.regime[sl],
+                doy=b.doy[sl],
+                hour=b.hour[sl],
+                year=b.year[sl],
+                month=b.month[sl],
+                day=b.day[sl],
+                glat=b.glat[sl],
+                glon=b.glon[sl],
+                alt_km=b.alt_km[sl],
+                f107=b.f107[sl],
+                ap=b.ap[sl],
+                y=b.y[sl],
+                targets=b.targets,
+                regime=b.regime[sl],
             )
 
         val = _take(train, slice(-1, None))
@@ -291,11 +324,15 @@ def run_full_training_pipeline(
 
     results: dict[str, Any] = {"device": device}
 
-    res_model, _, res_info = train_residual_mlp(train, val, config, pre=pre, device=device)
+    res_model, _, res_info = train_residual_mlp(
+        train, val, config, pre=pre, device=device
+    )
     save_torch_model(res_model, artifact_dir / "residual_mlp.pt")
     results["residual_mlp"] = res_info
 
-    film_model, _, film_info = train_film_mlp(train, val, config, pre=pre, device=device)
+    film_model, _, film_info = train_film_mlp(
+        train, val, config, pre=pre, device=device
+    )
     save_torch_model(film_model, artifact_dir / "film_mlp.pt")
     results["film_mlp"] = film_info
 

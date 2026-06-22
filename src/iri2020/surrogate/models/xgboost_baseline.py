@@ -22,7 +22,9 @@ from sklearn.multioutput import MultiOutputRegressor
 try:
     from xgboost import XGBRegressor
 except ImportError as e:  # pragma: no cover
-    raise ImportError("xgboost is required for the baseline: pip install xgboost") from e
+    raise ImportError(
+        "xgboost is required for the baseline: pip install xgboost"
+    ) from e
 
 
 class XGBoostBaseline:
@@ -48,7 +50,9 @@ class XGBoostBaseline:
         self.model = MultiOutputRegressor(base)
         self._fitted = False
 
-    def fit(self, X: np.ndarray, y: np.ndarray, cond: np.ndarray | None = None) -> "XGBoostBaseline":
+    def fit(
+        self, X: np.ndarray, y: np.ndarray, cond: np.ndarray | None = None
+    ) -> "XGBoostBaseline":
         if cond is not None:
             X = np.concatenate([X, cond], axis=-1)
         self.model.fit(X, y)

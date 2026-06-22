@@ -68,7 +68,9 @@ class ResidualFourierMLP(nn.Module):
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
 
-    def forward(self, x: torch.Tensor, cond: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, cond: torch.Tensor | None = None
+    ) -> torch.Tensor:
         # cond ignored (interface compatibility with FiLM models)
         h = self.stem(x)
         for blk in self.blocks:

@@ -56,7 +56,9 @@ class FiLMBlock(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.act = nn.GELU()
 
-    def forward(self, x: torch.Tensor, gamma: torch.Tensor, beta: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, gamma: torch.Tensor, beta: torch.Tensor
+    ) -> torch.Tensor:
         h = self.fc1(x)
         h = self.act(h)
         h = self.drop(h)
@@ -96,7 +98,9 @@ class FiLMConditionedMLP(nn.Module):
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
 
-    def forward(self, x: torch.Tensor, cond: torch.Tensor | None = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, cond: torch.Tensor | None = None
+    ) -> torch.Tensor:
         if cond is None:
             raise ValueError("FiLMConditionedMLP requires cond tensor")
         h = self.stem(x)

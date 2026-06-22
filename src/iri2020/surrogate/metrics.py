@@ -24,7 +24,7 @@ def per_target_metrics(
         yp = y_pred[:, j]
         err = yp - yt
         mae = float(np.mean(np.abs(err)))
-        rmse = float(np.sqrt(np.mean(err ** 2)))
+        rmse = float(np.sqrt(np.mean(err**2)))
         # Symmetric relative error clipped to avoid /0
         denom = np.maximum(np.abs(yt), 1e-12)
         mape = float(np.mean(np.abs(err) / denom))
@@ -74,11 +74,17 @@ def regime_split_metrics(
     regime: np.ndarray,
 ) -> dict[str, Any]:
     out: dict[str, Any] = {}
-    for name, mask in [("all", np.ones(len(regime), dtype=bool)),
-                       ("nominal", regime == 0),
-                       ("extreme", regime == 1)]:
+    for name, mask in [
+        ("all", np.ones(len(regime), dtype=bool)),
+        ("nominal", regime == 0),
+        ("extreme", regime == 1),
+    ]:
         if mask.sum() == 0:
             continue
         pt = per_target_metrics(y_true[mask], y_pred[mask], targets)
-        out[name] = {"per_target": pt, "aggregate": aggregate_metrics(pt), "n": int(mask.sum())}
+        out[name] = {
+            "per_target": pt,
+            "aggregate": aggregate_metrics(pt),
+            "n": int(mask.sum()),
+        }
     return out

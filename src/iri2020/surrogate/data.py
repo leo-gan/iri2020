@@ -66,7 +66,9 @@ class IRISampleBatch:
     regime: np.ndarray  # 0=nominal, 1=extreme
 
 
-def _sample_times(rng: np.random.Generator, n: int, extreme: bool = False) -> list[datetime]:
+def _sample_times(
+    rng: np.random.Generator, n: int, extreme: bool = False
+) -> list[datetime]:
     times: list[datetime] = []
     # Years with index data coverage in bundled apf107/ig_rz files.
     years = list(range(2000, 2020))
@@ -85,14 +87,18 @@ def _sample_times(rng: np.random.Generator, n: int, extreme: bool = False) -> li
     return times
 
 
-def _sample_geo(rng: np.random.Generator, n: int, extreme: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _sample_geo(
+    rng: np.random.Generator, n: int, extreme: bool = False
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     if extreme:
         # Polar + equatorial extremes, full altitude band
         lat_mode = rng.integers(0, 3, size=n)
         glat = np.where(
             lat_mode == 0,
             rng.uniform(-90, -60, size=n),
-            np.where(lat_mode == 1, rng.uniform(60, 90, size=n), rng.uniform(-15, 15, size=n)),
+            np.where(
+                lat_mode == 1, rng.uniform(60, 90, size=n), rng.uniform(-15, 15, size=n)
+            ),
         )
         glon = rng.uniform(-180, 180, size=n)
         alt = rng.uniform(100, 800, size=n)
@@ -118,7 +124,9 @@ def _extract_targets(ds, alt_km: float, targets: list[str]) -> np.ndarray:
     return np.array(row, dtype=np.float64)
 
 
-def _safe_iri_call_inline(t: datetime, a: float, glat: float, glon: float, targets: list[str]):
+def _safe_iri_call_inline(
+    t: datetime, a: float, glat: float, glon: float, targets: list[str]
+):
     """In-process IRI call (fast, but a Rust panic can poison the extension mutex)."""
     ensure_iri_data_dir()
     try:
@@ -133,7 +141,9 @@ def _safe_iri_call_inline(t: datetime, a: float, glat: float, glon: float, targe
         return None
 
 
-def _safe_iri_call_subprocess(t: datetime, a: float, glat: float, glon: float, targets: list[str]):
+def _safe_iri_call_subprocess(
+    t: datetime, a: float, glat: float, glon: float, targets: list[str]
+):
     """Subprocess IRI call — isolates panics; preferred for bulk dataset generation."""
     import tempfile
 
@@ -155,8 +165,15 @@ def _safe_iri_call_subprocess(t: datetime, a: float, glat: float, glon: float, t
             out_p = Path(td) / "out.json"
             req_p.write_text(json.dumps(req))
             _ = subprocess.run(
-                [sys.executable, "-m", "iri2020.surrogate.iri_worker",
-                 "--req", str(req_p), "--out", str(out_p)],
+                [
+                    sys.executable,
+                    "-m",
+                    "iri2020.surrogate.iri_worker",
+                    "--req",
+                    str(req_p),
+                    "--out",
+                    str(out_p),
+                ],
                 capture_output=True,
                 text=True,
                 timeout=90,
@@ -169,7 +186,13 @@ def _safe_iri_call_subprocess(t: datetime, a: float, glat: float, glon: float, t
             return None
         y_row = np.asarray(payload["y"], dtype=np.float64)
         return float(payload["f107"]), float(payload["ap"]), y_row
-    except (subprocess.SubprocessError, json.JSONDecodeError, KeyError, ValueError, OSError):
+    except (
+        subprocess.SubprocessError,
+        json.JSONDecodeError,
+        KeyError,
+        ValueError,
+        OSError,
+    ):
         return None
 
 
@@ -219,19 +242,29 @@ def generate_samples(
             times = _sample_times(rng, 1, extreme=extreme)
             glat_a, glon_a, alt_a = _sample_geo(rng, 1, extreme=extreme)
             t = times[0]
-            batch_reqs.append({
-                "year": t.year, "month": t.month, "day": t.day,
-                "hour": t.hour, "minute": t.minute,
-                "alt_km": float(alt_a[0]), "glat": float(glat_a[0]), "glon": float(glon_a[0]),
-                "targets": targets,
-                "meta": {
-                    "doy": t.timetuple().tm_yday + t.hour / 24.0,
-                    "hour": t.hour + t.minute / 60.0,
-                    "year": t.year, "month": t.month, "day": t.day,
-                    "glat": float(glat_a[0]), "glon": float(glon_a[0]),
+            batch_reqs.append(
+                {
+                    "year": t.year,
+                    "month": t.month,
+                    "day": t.day,
+                    "hour": t.hour,
+                    "minute": t.minute,
                     "alt_km": float(alt_a[0]),
-                },
-            })
+                    "glat": float(glat_a[0]),
+                    "glon": float(glon_a[0]),
+                    "targets": targets,
+                    "meta": {
+                        "doy": t.timetuple().tm_yday + t.hour / 24.0,
+                        "hour": t.hour + t.minute / 60.0,
+                        "year": t.year,
+                        "month": t.month,
+                        "day": t.day,
+                        "glat": float(glat_a[0]),
+                        "glon": float(glon_a[0]),
+                        "alt_km": float(alt_a[0]),
+                    },
+                }
+            )
 
         try:
             with tempfile.TemporaryDirectory() as td:
@@ -239,9 +272,19 @@ def generate_samples(
                 out_p = Path(td) / "out.json"
                 req_p.write_text(json.dumps({"batch": batch_reqs}))
                 subprocess.run(
-                    [sys.executable, "-m", "iri2020.surrogate.iri_worker",
-                     "--req", str(req_p), "--out", str(out_p)],
-                    capture_output=True, text=True, timeout=600, env=os.environ.copy(),
+                    [
+                        sys.executable,
+                        "-m",
+                        "iri2020.surrogate.iri_worker",
+                        "--req",
+                        str(req_p),
+                        "--out",
+                        str(out_p),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    env=os.environ.copy(),
                 )
                 if not out_p.exists():
                     failed += len(batch_reqs)
@@ -255,7 +298,14 @@ def generate_samples(
                     if not np.isfinite(y_row).all():
                         failed += 1
                         continue
-                    rows.append({**meta, "f107": float(res["f107"]), "ap": float(res["ap"]), "y": y_row})
+                    rows.append(
+                        {
+                            **meta,
+                            "f107": float(res["f107"]),
+                            "ap": float(res["ap"]),
+                            "y": y_row,
+                        }
+                    )
                     if len(rows) >= n:
                         break
                 else:
@@ -264,18 +314,32 @@ def generate_samples(
             failed += len(batch_reqs)
 
         if progress:
-            print(f"  generated {min(len(rows), n)}/{n} ({'extreme' if extreme else 'nominal'}; failed={failed})", flush=True)
+            print(
+                f"  generated {min(len(rows), n)}/{n} ({'extreme' if extreme else 'nominal'}; failed={failed})",
+                flush=True,
+            )
 
     rows = rows[:n]
     if len(rows) < n:
-        print(f"  warning: only collected {len(rows)}/{n} samples (failed={failed})", flush=True)
+        print(
+            f"  warning: only collected {len(rows)}/{n} samples (failed={failed})",
+            flush=True,
+        )
     if not rows:
         return IRISampleBatch(
-            doy=np.zeros(0), hour=np.zeros(0), year=np.zeros(0, dtype=np.int32),
-            month=np.zeros(0, dtype=np.int32), day=np.zeros(0, dtype=np.int32),
-            glat=np.zeros(0), glon=np.zeros(0), alt_km=np.zeros(0),
-            f107=np.zeros(0), ap=np.zeros(0), y=np.zeros((0, len(targets))),
-            targets=targets, regime=np.zeros(0, dtype=np.int8),
+            doy=np.zeros(0),
+            hour=np.zeros(0),
+            year=np.zeros(0, dtype=np.int32),
+            month=np.zeros(0, dtype=np.int32),
+            day=np.zeros(0, dtype=np.int32),
+            glat=np.zeros(0),
+            glon=np.zeros(0),
+            alt_km=np.zeros(0),
+            f107=np.zeros(0),
+            ap=np.zeros(0),
+            y=np.zeros((0, len(targets))),
+            targets=targets,
+            regime=np.zeros(0, dtype=np.int8),
         )
     regime = np.full(len(rows), 1 if extreme else 0, dtype=np.int8)
     return IRISampleBatch(
@@ -290,9 +354,9 @@ def generate_samples(
         f107=np.array([r["f107"] for r in rows], dtype=np.float64),
         ap=np.array([r["ap"] for r in rows], dtype=np.float64),
         y=np.stack([r["y"] for r in rows], axis=0),
-        targets=targets, regime=regime,
+        targets=targets,
+        regime=regime,
     )
-
 
 
 def concat_batches(*batches: IRISampleBatch) -> IRISampleBatch:

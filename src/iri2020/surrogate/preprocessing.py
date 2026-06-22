@@ -68,7 +68,16 @@ def encode_periodic_row(
     alt_n = (alt_km - 60.0) / (2000.0 - 60.0)  # broad physical range
     alt_n = np.clip(alt_n, -0.1, 1.2)
     return np.array(
-        [float(s_doy), float(c_doy), float(s_hr), float(c_hr), float(lat_n), float(s_lon), float(c_lon), float(alt_n)],
+        [
+            float(s_doy),
+            float(c_doy),
+            float(s_hr),
+            float(c_hr),
+            float(lat_n),
+            float(s_lon),
+            float(c_lon),
+            float(alt_n),
+        ],
         dtype=np.float64,
     )
 
@@ -79,7 +88,9 @@ def encode_condition_row(f107: float, ap: float, doy: float) -> np.ndarray:
     # Rough normalizations around climatological means
     f107_n = (f107 - 100.0) / 80.0
     ap_n = (ap - 10.0) / 30.0
-    return np.array([float(f107_n), float(ap_n), float(s_doy), float(c_doy)], dtype=np.float64)
+    return np.array(
+        [float(f107_n), float(ap_n), float(s_doy), float(c_doy)], dtype=np.float64
+    )
 
 
 def gaussian_fourier_features(
@@ -153,11 +164,17 @@ class IRIPreprocessor:
         feats = np.zeros((n, 8), dtype=np.float64)
         for i in range(n):
             feats[i] = encode_periodic_row(
-                float(doy[i]), float(hour[i]), float(glat[i]), float(glon[i]), float(alt_km[i])
+                float(doy[i]),
+                float(hour[i]),
+                float(glat[i]),
+                float(glon[i]),
+                float(alt_km[i]),
             )
         return feats
 
-    def build_raw_conditions(self, f107: np.ndarray, ap: np.ndarray, doy: np.ndarray) -> np.ndarray:
+    def build_raw_conditions(
+        self, f107: np.ndarray, ap: np.ndarray, doy: np.ndarray
+    ) -> np.ndarray:
         n = len(doy)
         cond = np.zeros((n, 4), dtype=np.float64)
         for i in range(n):
@@ -186,7 +203,9 @@ class IRIPreprocessor:
         rng = np.random.default_rng(self.config.seed)
         d_in = x_raw.shape[1]
         m = self.config.fourier_features
-        self.fourier_B = rng.normal(0.0, self.config.fourier_scale, size=(d_in, m)).astype(np.float64)
+        self.fourier_B = rng.normal(
+            0.0, self.config.fourier_scale, size=(d_in, m)
+        ).astype(np.float64)
 
         x_ff = gaussian_fourier_features(x_raw, self.fourier_B)
         x_full = np.concatenate([x_raw, x_ff], axis=-1)
@@ -225,7 +244,9 @@ class IRIPreprocessor:
         x_full = np.concatenate([x_raw, x_ff], axis=-1)
         return self.x_state.transform(x_full).astype(np.float32)
 
-    def transform_cond(self, f107: np.ndarray, ap: np.ndarray, doy: np.ndarray) -> np.ndarray:
+    def transform_cond(
+        self, f107: np.ndarray, ap: np.ndarray, doy: np.ndarray
+    ) -> np.ndarray:
         self._check_fitted()
         assert self.cond_state is not None
         cond_raw = self.build_raw_conditions(f107, ap, doy)
@@ -270,7 +291,9 @@ class IRIPreprocessor:
             "cond_std": self.cond_state.std.tolist(),  # type: ignore[union-attr]
             "y_mean": self.y_state.mean.tolist(),  # type: ignore[union-attr]
             "y_std": self.y_state.std.tolist(),  # type: ignore[union-attr]
-            "fourier_B": self.fourier_B.tolist() if self.fourier_B is not None else None,
+            "fourier_B": self.fourier_B.tolist()
+            if self.fourier_B is not None
+            else None,
             "config": self.config.to_dict(),
         }
         with open(path, "w") as f:
