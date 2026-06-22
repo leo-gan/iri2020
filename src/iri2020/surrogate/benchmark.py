@@ -12,7 +12,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 import json
-import time
 
 import numpy as np
 import torch
@@ -20,7 +19,7 @@ import torch
 from iri2020.base import IRI
 
 from .config import SurrogateConfig
-from .data import IRISampleBatch, generate_samples, load_batch, save_batch
+from .data import IRISampleBatch, generate_samples, load_batch
 from .preprocessing import IRIPreprocessor
 from .metrics import regime_split_metrics, timed_call, per_target_metrics, aggregate_metrics
 from .models.residual_mlp import ResidualFourierMLP

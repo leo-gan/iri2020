@@ -16,19 +16,17 @@ We store both inputs and IRI outputs so training is fully offline after generati
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Iterator
 import json
 
 import numpy as np
 
 from iri2020.base import IRI
 
-from .config import SurrogateConfig, DEFAULT_TARGETS
+from .config import SurrogateConfig
 
 import os
-import json
 import subprocess
 import sys
 
@@ -156,7 +154,7 @@ def _safe_iri_call_subprocess(t: datetime, a: float, glat: float, glon: float, t
             req_p = Path(td) / "req.json"
             out_p = Path(td) / "out.json"
             req_p.write_text(json.dumps(req))
-            proc = subprocess.run(
+            _ = subprocess.run(
                 [sys.executable, "-m", "iri2020.surrogate.iri_worker",
                  "--req", str(req_p), "--out", str(out_p)],
                 capture_output=True,

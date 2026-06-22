@@ -39,7 +39,6 @@ import numpy as np
 
 from .config import (
     LOG_TARGETS,
-    LINEAR_TARGETS,
     PERIODIC_INPUTS,
     SurrogateConfig,
 )

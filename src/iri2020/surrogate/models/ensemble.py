@@ -14,9 +14,8 @@ Caveats for this application
 
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
-from typing import Callable, Type
+from typing import Callable
 
 import numpy as np
 import torch

@@ -1,6 +1,8 @@
 """Subprocess worker for IRI evaluations (single or batch)."""
 from __future__ import annotations
-import argparse, json, os, sys
+import argparse
+import json
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -19,7 +21,9 @@ def _eval_one(req: dict) -> dict:
     import numpy as np
     t = datetime(int(req["year"]), int(req["month"]), int(req["day"]),
                  int(req["hour"]), int(req.get("minute", 0)), 0)
-    a = float(req["alt_km"]); glat = float(req["glat"]); glon = float(req["glon"])
+    a = float(req["alt_km"])
+    glat = float(req["glat"])
+    glon = float(req["glon"])
     targets = list(req["targets"])
     try:
         ds = IRI(t, [a, a, 1.0], glat, glon)
