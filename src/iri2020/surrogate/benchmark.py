@@ -274,9 +274,7 @@ def run_benchmark(
         film_m: nn.Module = models["film_mlp"].to(device)
 
         def _film_pred(m: nn.Module = film_m) -> np.ndarray:
-            return nn_predict_physical(
-                m, pre, eval_batch, use_cond=True, device=device
-            )
+            return nn_predict_physical(m, pre, eval_batch, use_cond=True, device=device)
 
         predictors.append(("film_mlp", _film_pred))
 
@@ -284,9 +282,7 @@ def run_benchmark(
         ens_m: nn.Module = models["film_ensemble"].to(device)
 
         def _ens_pred(m: nn.Module = ens_m) -> np.ndarray:
-            return nn_predict_physical(
-                m, pre, eval_batch, use_cond=True, device=device
-            )
+            return nn_predict_physical(m, pre, eval_batch, use_cond=True, device=device)
 
         predictors.append(("film_ensemble", _ens_pred))
 
