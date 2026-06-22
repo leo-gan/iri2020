@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/IRI2020/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/algorithms/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/fortran/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/porting/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/python/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/rust/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+    <url>
+         <loc>https://leo-gan.github.io/iri2020/surrogate/</loc>
+         <lastmod>2026-06-22</lastmod>
+    </url>
+</urlset>
