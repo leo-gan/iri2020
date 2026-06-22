@@ -25,6 +25,14 @@ lint = [
 docs = [
     "mkdocs-material",
 ]
+surrogate = [
+    "torch",
+    "xgboost",
+    "scikit-learn",
+    "joblib",
+    "tqdm",
+    "pyyaml",
+]
 
 [tool.ruff]
 line-length = 88

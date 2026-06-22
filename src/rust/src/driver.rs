@@ -23,7 +23,10 @@ pub fn run_iri(
     glon: f32,
     alt_range: [f32; 3],
 ) -> Result<IriResult, PyErr> {
-    let _lock = get_iri_mutex().lock().unwrap();
+    // Recover from a previously poisoned lock (panic in an earlier IRI call).
+    let _lock = get_iri_mutex()
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     if std::env::var("IRI2020_DATA_DIR").is_err() {
         let paths = ["src/data", "../data", "../../src/data", "data"];
         for path in &paths {

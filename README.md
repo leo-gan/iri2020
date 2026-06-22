@@ -54,3 +54,28 @@ The Rust port is built with `Maturin` (`PyO3`) and can be installed with:
 ```bash
 uv pip install .
 ```
+
+## Neural network surrogates
+
+Optional **learned surrogates** approximate IRI2020 pointwise outputs for fast evaluation,
+with preprocessing for periodic drivers and multi-decade densities, two neural architectures
+(Deep Residual MLP + Fourier features; FiLM-conditioned MLP), a deep ensemble for uncertainty,
+and an XGBoost baseline.
+
+Short smoke training + benchmark (verify convergence and metrics, not production accuracy):
+
+```bash
+source .venv/bin/activate
+uv pip install torch xgboost scikit-learn joblib   # once
+python -m iri2020.surrogate.scripts.run_pipeline \
+  --n-train 600 --epochs 6 --artifact-dir surrogate_artifacts
+```
+
+Outputs land in `surrogate_artifacts/` (`benchmark_report.json`, model weights, preprocessor).
+
+Full design notes, trade-offs, critiques, and roadmap: **[docs/surrogate.md](docs/surrogate.md)**.
+
+**Caveats:** surrogates approximate the empirical model (Rust runtime), not measurements.
+Default runs are intentionally short. Fortran is present in-tree but not called from Python;
+the benchmark documents that gap rather than inventing numbers.
+
